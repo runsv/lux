@@ -233,30 +233,26 @@ static int arg_is_fd ( lua_State * const L, const int index )
 #include "os_match.c"
 #include "os_pw.c"
 #include "os_fs.c"
-#if defined (OSsolaris) || defined (OSsunos5)
-#  include "os_streams.c"
-#endif
 #include "os_net.c"
 #include "os_utils.c"
-#include "os_sig.c"
-
-/*
-#include "os_reboot.c"
-#include "os_utmp.c"
-#ifdef SUPERVISORD
-# include "os_super.c"
-#endif
-*/
+#include "os_gen.c"
 
 /* OS specific functions */
+#if defined (OSbsd)
+#endif
+
 #if defined (OSLinux)
   /* Linux specific functions */
 #  include "os_Linux.c"
 #elif defined (OSfreebsd)
+#elif defined (OSsolaris) || defined (OSsunos5)
+#  include "os_streams.c"
 #endif
 
+#include "os_sig.c"
+
 /*
- * integer bit ops
+ * integer bitwise ops
  */
 
 /* bitwise (unary) negation */
@@ -1778,16 +1774,6 @@ static const luaL_Reg sys_func [ ] =
   { "fstatvfs",			Sfstatvfs	},
   { "statfs",			Sstatfs		},
   { "fstatfs",			Sfstatfs	},
-  { "umount",			Sumount		},
-  { "mount",			Smount		},
-  { "remount",			Lremount	},
-  { "remount_ro",		Lremount_ro	},
-  { "move_mount",		Lmove_mount	},
-  { "mvmount",			Lmove_mount	},
-  { "bind_mount",		Lbind_mount	},
-  { "rec_bind_mount",		Lrec_bind_mount		},
-  { "change_mount",		Lchange_mount		},
-  { "chmount",			Lchange_mount		},
   { "swapon",			Sswapon		},
   { "swapoff",			Sswapoff	},
   { "mountpoint",		Lmountpoint	},
@@ -1797,42 +1783,6 @@ static const luaL_Reg sys_func [ ] =
   { "get_pseudofs",		Lget_pseudofs	},
   { "cgroup_level",		Lcgroup_level	},
   /* end of imported functions from "os_fs.c" */
-
-#if 0
-  /* functions imported from "os_reboot.c" : */
-  { "halt",			Lhalt		},
-  { "poweroff",			Lpoweroff	},
-  { "reboot",			Lreboot		},
-  { "sys_reboot",		Sreboot		},
-  { "fork_halt",		Lfork_halt	},
-  { "fork_poweroff",		Lfork_poweroff	},
-  { "fork_reboot",		Lfork_reboot	},
-  /* end of imported functions from "os_reboot.c" */
-
-  /* functions imported from "os_utmp.c" : */
-  { "write_utmp",		Lwrite_utmp		},
-  { "utmp_boot_time",		Lutmp_boot_time		},
-  { "utmp_halt_time",		Lutmp_halt_time		},
-  { "utmp_shutdown_time",	Lutmp_halt_time		},
-  { "utmp_write_runlevel",	Lutmp_write_runlevel	},
-  { "utmp_change_runlevel",	Lutmp_write_runlevel	},
-  { "utmp_new_runlevel",	Lutmp_write_runlevel	},
-  { "utmp_dead_proc",		Lutmp_dead_proc		},
-  { "utmp_init_proc",		Lutmp_init_proc		},
-  { "utmp_login_proc",		Lutmp_login_proc	},
-  { "utmp_dead_process",	Lutmp_dead_proc		},
-  { "utmp_init_process",	Lutmp_init_proc		},
-  { "utmp_login_process",	Lutmp_login_proc	},
-  { "utmp_create",		Lutmp_create		},
-  { "utmp_set_boot",		Lutmp_set_boot		},
-  { "utmp_set_halt",		Lutmp_set_halt		},
-  { "utmp_set_runlevel",	Lutmp_set_runlevel	},
-  { "utmp_set_dead",		Lutmp_set_dead		},
-  { "utmp_set_init",		Lutmp_set_init		},
-  { "utmp_set_login",		Lutmp_set_login		},
-  { "utmp_dump",		Lutmp_dump		},
-  /* end of imported functions from "os_utmp.c" */
-#endif
 
   /* functions imported from "os_net.c" : */
   { "if_up",			Lif_up		},
@@ -1849,9 +1799,15 @@ static const luaL_Reg sys_func [ ] =
 #endif
   /* end of imported functions from "os_utils.c" */
 
+  /* functions imported from "os_gen.c" : */
+  { "umount",			Sunmount	},
+  { "unmount",			Sunmount	},
+  /* end of imported functions from "os_gen.c" */
+
   /* functions imported from "os_Linux.c" : */
 #if defined (OSLinux)
   /* Linux specific functions */
+  { "mount",			Smount		},
   { "gettid",			Sgettid		},
   { "unshare",			Sunshare	},
   { "setns",			Ssetns		},

@@ -145,69 +145,6 @@ static int Sfstatfs ( lua_State * const L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-/* helper function for the umount(2) wrapper functions */
-static int Lumountit ( lua_State * const L, const int f )
-{
-#if defined (OSLinux)
-  const int n = lua_gettop ( L ) ;
-
-  if ( 0 < n ) {
-    int i ;
-    const char * path = NULL ;
-
-    for ( i = 1 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( f ? umount2 ( path, f ) : umount ( path ) ) {
-          i = errno ;
-          return luaL_error ( L, "umount( %s ) failed: %s (errno %d)",
-            path, strerror ( i ), i ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid mount point" ) ;
-      }
-    }
-
-    return 0 ;
-  }
-
-  return luaL_error ( L, "mount point required" ) ;
-#else
-  return luaL_error ( L, "platform not supported" ) ;
-#endif
-}
-
-/* wrapper function for the umount(2) syscall */
-static int Sumount ( lua_State * const L )
-{
-#if defined (OSLinux)
-  return Lumountit ( L, 0 ) ;
-#else
-  return luaL_error ( L, "platform not supported" ) ;
-#endif
-}
-
-/* wrapper function for the mount(2) syscall */
-static int Smount ( lua_State * const L )
-{
-#if defined (OSLinux)
-  const char * source = luaL_checkstring ( L, 1 ) ;
-  const char * target = luaL_checkstring ( L, 2 ) ;
-  const char * fstype = luaL_checkstring ( L, 3 ) ;
-  unsigned long f = (lua_Unsigned) luaL_checkinteger ( L, 4 ) ;
-  const char * data = luaL_checkstring ( L, 5 ) ;
-
-  if ( source && target && fstype && data
-    && * source && * target && * fstype && * data )
-  {
-    return res_zero ( L, mount ( source, target, fstype, f, data ) ) ;
-  }
-#endif
-
-  return 0 ;
-}
-
 static int Lremount ( lua_State * const L )
 {
 #if defined (OSLinux)

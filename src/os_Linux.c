@@ -86,7 +86,7 @@ static int Lsys_sak_on ( lua_State * const L )
  * (u)mount(2) related
  */
 
-/* constants used by (u)mount(2) */
+/* constants used by mount(2) */
 static int Lget_mount_flags ( lua_State * const L )
 {
   /* create a new table holding the constants (names as keys)
@@ -117,14 +117,67 @@ static int Lget_mount_flags ( lua_State * const L )
   L_ADD_CONST( L, MS_STRICTATIME )
   L_ADD_CONST( L, MS_SYNCHRONOUS )
 
+  /* return this table */
+  return 1 ;
+}
+
+/* wrapper function for the mount(2) syscall */
+static int Smount ( lua_State * const L )
+{
+  const char * const src = luaL_checkstring ( L, 1 ) ;
+  const char * const mp = luaL_checkstring ( L, 2 ) ;
+  const char * const type = luaL_checkstring ( L, 3 ) ;
+  const lua_Unsigned f = (lua_Unsigned) luaL_optinteger ( L, 4, 0 ) ;
+  const char * const data = luaL_optstring ( L, 5, NULL ) ;
+
+  if ( src && mp && type && * src && * mp && * type ) {
+    return res0 ( L, "mount", mount ( src, mp, type,
+      ( 0 < f ) ? (unsigned long int) f : 0, data )
+      ) ;
+  }
+
+  return luaL_error ( L, "invalid args" ) ;
+}
+
+/* constants used by umount2(2) */
+static int Lget_umount2_flags ( lua_State * const L )
+{
+  lua_newtable ( L ) ;
+
   /* constants used by umount */
   L_ADD_CONST( L, MNT_DETACH )
   L_ADD_CONST( L, MNT_EXPIRE )
   L_ADD_CONST( L, MNT_FORCE )
   L_ADD_CONST( L, UMOUNT_NOFOLLOW )
 
-  /* return this table */
   return 1 ;
+}
+
+/* wrapper function for the umount2(2) syscall */
+static int Sumount2 ( lua_State * const L )
+{
+  const int n = lua_gettop ( L ) ;
+
+  if ( 1 < n ) {
+    int i, f = (int) luaL_checkinteger ( L, 1 ) ;
+    f = ( 0 < f ) ? f : 0 ;
+
+    for ( i = 2 ; n >= i ; ++ i ) {
+      const char * const mp = luaL_checkstring ( L, i ) ;
+
+      if ( mp && * mp ) {
+        if ( umount2 ( mp, f ) ) {
+          return rep_err ( L, "umount2", errno ) ;
+        }
+      } else {
+        return luaL_argerror ( L, i, "not a mount point path" ) ;
+      }
+    }
+
+    return 0 ;
+  }
+
+  return luaL_error ( L, "integer flag bitmask and mount point paths required" ) ;
 }
 
 /* binding for the unshare(2) Linux syscall */
