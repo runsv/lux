@@ -94,7 +94,6 @@ static int Lget_mount_flags ( lua_State * const L )
    */
   lua_newtable ( L ) ;
 
-  /* constants used by mount */
   L_ADD_CONST( L, MS_REMOUNT )
   L_ADD_CONST( L, MS_MOVE )
   L_ADD_CONST( L, MS_BIND )
@@ -144,7 +143,6 @@ static int Lget_umount2_flags ( lua_State * const L )
 {
   lua_newtable ( L ) ;
 
-  /* constants used by umount */
   L_ADD_CONST( L, MNT_DETACH )
   L_ADD_CONST( L, MNT_EXPIRE )
   L_ADD_CONST( L, MNT_FORCE )
