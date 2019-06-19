@@ -178,6 +178,76 @@ static int Sumount2 ( lua_State * const L )
   return luaL_error ( L, "integer flag bitmask and mount point paths required" ) ;
 }
 
+/*
+ * swapo(n,ff)(2) related
+ */
+
+/* wrapper function for the swapoff syscall */
+static int Sswapoff ( lua_State * const L )
+{
+  const int n = lua_gettop ( L ) ;
+
+  if ( 0 < n ) {
+    int i ;
+
+    for ( i = 1 ; n >= i ; ++ i ) {
+      const char * const path = luaL_checkstring ( L, i ) ;
+
+      if ( path && * path ) {
+        if ( swapoff ( path ) ) {
+          return rep_err ( L, "swapoff", errno ) ;
+        }
+      } else {
+        return luaL_argerror ( L, i, "invalid swap path" ) ;
+      }
+    }
+
+    return 0 ;
+  }
+
+  return luaL_error ( L, "swap path argument required" ) ;
+}
+
+/* constants used by swapon(2) */
+static int Lget_swapon_flags ( lua_State * const L )
+{
+  lua_newtable ( L ) ;
+
+  L_ADD_CONST( L, SWAP_FLAG_DISCARD )
+  L_ADD_CONST( L, SWAP_FLAG_PREFER )
+  L_ADD_CONST( L, SWAP_FLAG_PRIO_MASK )
+  L_ADD_CONST( L, SWAP_FLAG_PRIO_SHIFT )
+
+  return 1 ;
+}
+
+/* wrapper function for the swapon(2) syscall */
+static int Sswapon ( lua_State * const L )
+{
+  const int n = lua_gettop ( L ) ;
+
+  if ( 1 < n ) {
+    int i ;
+    const int f = (int) luaL_checkinteger ( L, 1 ) ;
+
+    for ( i = 2 ; n >= i ; ++ i ) {
+      const char * const path = luaL_checkstring ( L, i ) ;
+
+      if ( path && * path ) {
+        if ( swapon ( path, f ) ) {
+          return rep_err ( L, "swapon", errno ) ;
+        }
+      } else {
+        return luaL_argerror ( L, i, "invalid swap path" ) ;
+      }
+    }
+
+    return 0 ;
+  }
+
+  return luaL_error ( L, "flag bitmask and path argument required" ) ;
+}
+
 /* binding for the unshare(2) Linux syscall */
 static int Sunshare ( lua_State * const L )
 {

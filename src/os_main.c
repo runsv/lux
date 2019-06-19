@@ -131,10 +131,10 @@ static int rep_err ( lua_State * const L, const char * const func, int e )
   e = ( 0 < e ) ? e : 0 ;
 
   if ( func && * func ) {
-      return luaL_error ( L, "%s() failed: %s", func, strerror ( e ) ) ;
+    return luaL_error ( L, "%s() failed: %s (errno %d)", func, strerror ( e ), e ) ;
   }
 
-  return luaL_error ( L, "syscall failed: %s", strerror ( e ) ) ;
+  return luaL_error ( L, "syscall failed: %s (errno %d)", strerror ( e ), e ) ;
 }
 
 /* helper function that reports errors stored in errno
@@ -147,10 +147,10 @@ static int chk_res ( lua_State * const L, const char * const func, const int c )
     e = ( 0 < e ) ? e : 0 ;
 
     if ( func && * func ) {
-      return luaL_error ( L, "%s() failed: %s", func, strerror ( e ) ) ;
+      return luaL_error ( L, "%s() failed: %s (errno %d)", func, strerror ( e ), e ) ;
     }
 
-    return luaL_error ( L, "syscall failed: %s", strerror ( e ) ) ;
+    return luaL_error ( L, "syscall failed: %s (errno %d)", strerror ( e ), e ) ;
   }
 
   return 0 ;
@@ -1195,14 +1195,6 @@ static void add_const ( lua_State * const L )
   L_ADD_CONST( L, SOCK_CLOEXEC )
   L_ADD_CONST( L, SO_KEEPALIVE )
 
-  /* constants for swapon/off */
-#ifdef OSLinux
-  L_ADD_CONST( L, SWAP_FLAG_DISCARD )
-  L_ADD_CONST( L, SWAP_FLAG_PREFER )
-  L_ADD_CONST( L, SWAP_FLAG_PRIO_MASK )
-  L_ADD_CONST( L, SWAP_FLAG_PRIO_SHIFT )
-#endif
-
   /* constants used by syslog() */
   /* options */
   L_ADD_CONST( L, LOG_CONS )
@@ -1774,10 +1766,6 @@ static const luaL_Reg sys_func [ ] =
   { "fstatvfs",			Sfstatvfs	},
   { "statfs",			Sstatfs		},
   { "fstatfs",			Sfstatfs	},
-  { "swapon",			Sswapon		},
-  { "swapoff",			Sswapoff	},
-  { "mountpoint",		Lmountpoint	},
-  { "is_mount_point",		Lmountpoint	},
   { "mtab_mount_point",		Lmtab_mount_point	},
   { "is_mtab_mount_point",	Lmtab_mount_point	},
   { "get_pseudofs",		Lget_pseudofs	},
@@ -1795,11 +1783,11 @@ static const luaL_Reg sys_func [ ] =
   { "init_urandom",		Linit_urandom		},
   { "get_urandom_int",		Lget_urandom_int	},
   { "check_pidfile",		Lcheck_pidfile		},
-#if defined (OSLinux)
-#endif
   /* end of imported functions from "os_utils.c" */
 
   /* functions imported from "os_gen.c" : */
+  { "mountpoint",		Lmountpoint	},
+  { "is_mount_point",		Lmountpoint	},
   { "umount",			Sunmount	},
   { "unmount",			Sunmount	},
   /* end of imported functions from "os_gen.c" */
@@ -1808,6 +1796,8 @@ static const luaL_Reg sys_func [ ] =
 #if defined (OSLinux)
   /* Linux specific functions */
   { "mount",			Smount		},
+  { "swapon",			Sswapon		},
+  { "swapoff",			Sswapoff	},
   { "gettid",			Sgettid		},
   { "unshare",			Sunshare	},
   { "setns",			Ssetns		},

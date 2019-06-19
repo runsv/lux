@@ -88,6 +88,10 @@ static int Lkill_all ( const int sig )
 }
 
 /*
+ * swapctl(2) related
+ */
+
+/*
  * uadmin(2) related
  */
 
