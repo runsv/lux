@@ -2,19 +2,6 @@
  * generic syscalls common to ALL posix platforms
  */
 
-/* check whether a given directory path is a mountpoint */
-static int Lmountpoint ( lua_State * const L )
-{
-  const char * const mp = luaL_checkstring ( L, 1 ) ;
-
-  if ( mp && * mp ) {
-    lua_pushboolean ( L, is_mount_point ( mp ) ) ;
-    return 1 ;
-  }
-
-  return luaL_argerror ( L, 1, "mount point path required" ) ;
-}
-
 /* wrapper function for the u(n)mount(2) syscall */
 static int Sunmount ( lua_State * const L )
 {

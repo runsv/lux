@@ -1568,50 +1568,6 @@ found :
   return res ;
 }
 
-/* see if a given directory is a mountpoint */
-static int is_mount_point ( const char * const path )
-{
-  if ( path && * path ) {
-    struct stat st ;
-
-    if ( ( 0 == lstat ( path, & st ) ) && S_ISDIR( st . st_mode ) ) {
-      if (
-#if defined (OSLinux)
-        0 < st . st_ino && 4 > st . st_ino
-#else
-        /* this is traditional, and what FreeBSD/PC-BSD does.
-         * on-disc volumes on Linux mostly do this, too.
-         */
-        2 == st . st_ino
-#endif
-      ) { return 1 ; }
-      else {
-        unsigned int i ;
-        struct stat st2 ;
-        char buf [ 256 ] = { 0 } ;
-        const size_t s = sizeof ( buf ) - 5 ;
-
-        for ( i = 0 ; s > i && '\0' != path [ i ] ; ++ i ) {
-          buf [ i ] = path [ i ] ;
-        }
-
-        buf [ i ++ ] = '/' ;
-        buf [ i ++ ] = '.' ;
-        buf [ i ++ ] = '.' ;
-        buf [ i ] = '\0' ;
-
-        if ( ( 0 == lstat ( buf, & st2 ) ) && S_ISDIR( st2 . st_mode ) ) {
-          if ( st2 . st_dev != st . st_dev ) { return 1 ; }
-          /* this is true for the root dir "/" */
-          else if ( st2 . st_ino == st . st_ino ) { return 1 ; }
-        }
-      }
-    }
-  }
-
-  return 0 ;
-}
-
 /* requires /proc to be mounted */
 static int is_tmpfs ( const char * const path, const char * const mtab )
 {

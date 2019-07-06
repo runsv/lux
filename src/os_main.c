@@ -1756,6 +1756,8 @@ static const luaL_Reg sys_func [ ] =
   { "fstatvfs",			Sfstatvfs	},
   { "statfs",			Sstatfs		},
   { "fstatfs",			Sfstatfs	},
+  { "mountpoint",		Lmountpoint	},
+  { "is_mount_point",		Lmountpoint	},
   /* end of imported functions from "os_fs.c" */
 
   /* functions imported from "os_net.c" : */
@@ -1772,8 +1774,6 @@ static const luaL_Reg sys_func [ ] =
   /* end of imported functions from "os_utils.c" */
 
   /* functions imported from "os_gen.c" : */
-  { "mountpoint",		Lmountpoint	},
-  { "is_mount_point",		Lmountpoint	},
   { "umount",			Sunmount	},
   { "unmount",			Sunmount	},
   /* end of imported functions from "os_gen.c" */
@@ -1794,8 +1794,10 @@ static const luaL_Reg sys_func [ ] =
   { "sysinfo",			Ssysinfo	},
   { "load_module",		Lload_module	},
   { "setup_iface_lo",		Lsetup_iface_lo		},
+  /*
   { "get_pseudofs",		Lget_pseudofs	},
   { "cgroup_level",		Lcgroup_level	},
+  */
 # if defined (__GLIBC__)
   { "mtab_mount_point",		Lmtab_mount_point	},
   { "is_mtab_mount_point",	Lmtab_mount_point	},
