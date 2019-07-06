@@ -5,15 +5,14 @@
 /* check whether a given directory path is a mountpoint */
 static int Lmountpoint ( lua_State * const L )
 {
-  int r = 0 ;
   const char * const mp = luaL_checkstring ( L, 1 ) ;
 
   if ( mp && * mp ) {
-    r = is_mount_point ( mp ) ;
+    lua_pushboolean ( L, is_mount_point ( mp ) ) ;
+    return 1 ;
   }
 
-  lua_pushboolean ( L, r ) ;
-  return 1 ;
+  return luaL_argerror ( L, 1, "mount point path required" ) ;
 }
 
 /* wrapper function for the u(n)mount(2) syscall */

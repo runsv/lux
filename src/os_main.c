@@ -39,25 +39,15 @@ static int chrtoi ( const int b, const int c )
 static lua_Unsigned strntou ( const int b, const lua_Unsigned max,
   size_t n, const char * str, const char ** end )
 {
-  if ( ( 1 < b ) && ( 37 > b ) && s && * s ) {
+  if ( ( 1 < b ) && ( 37 > b ) && str && * str ) {
     lua_Unsigned m = 0, r = 0 ;
-    int i = 1, j = strlen ( s ) ;
+    int i = 1, j = strlen ( str ) ;
 
-    m = ~ (lua_Unsigend) 0 ;
+    m = ~ (lua_Unsigned) 0 ;
     m = ( 0 < max && max < m ) ? max : m ;
 
-    while ( str && * str ) {
+    while ( str && * str && ( m > r ) ) {
       int c = chrtoi ( b, * str ) ;
-
-      long tmp = (val * base) + c ;
-      if ( tmp > maxval ) break ;
-      val = tmp ;
-
-      if ( LUA_MAXINTEGER <= r ) {
-        return r ;
-      } else {
-        continue ;
-      }
 
       if ( 0 > c ) {
         return -1 ;
@@ -98,7 +88,7 @@ static ssize_t fd_puts ( int fd, const char * const msg )
   return write ( fd, "\n", 1 ) ;
 }
 
-static ssize_t fd_print ( int fd, const char * const msg )
+static ssize_t print2fd ( int fd, const char * const msg )
 {
   ssize_t i = 0 ;
   fd = ( 0 > fd ) ? STDOUT_FILENO : fd ;
@@ -1766,10 +1756,6 @@ static const luaL_Reg sys_func [ ] =
   { "fstatvfs",			Sfstatvfs	},
   { "statfs",			Sstatfs		},
   { "fstatfs",			Sfstatfs	},
-  { "mtab_mount_point",		Lmtab_mount_point	},
-  { "is_mtab_mount_point",	Lmtab_mount_point	},
-  { "get_pseudofs",		Lget_pseudofs	},
-  { "cgroup_level",		Lcgroup_level	},
   /* end of imported functions from "os_fs.c" */
 
   /* functions imported from "os_net.c" : */
@@ -1808,6 +1794,12 @@ static const luaL_Reg sys_func [ ] =
   { "sysinfo",			Ssysinfo	},
   { "load_module",		Lload_module	},
   { "setup_iface_lo",		Lsetup_iface_lo		},
+  { "get_pseudofs",		Lget_pseudofs	},
+  { "cgroup_level",		Lcgroup_level	},
+# if defined (__GLIBC__)
+  { "mtab_mount_point",		Lmtab_mount_point	},
+  { "is_mtab_mount_point",	Lmtab_mount_point	},
+# endif
 #endif
   /* end of imported functions from "os_Linux.c" */
 

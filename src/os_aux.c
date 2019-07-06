@@ -1613,36 +1613,6 @@ static int is_mount_point ( const char * const path )
 }
 
 /* requires /proc to be mounted */
-static int mtab_mount_point ( const char * const path, const char * const mtab )
-{
-#if defined (OSLinux)
-  if ( path && * path ) {
-    char r = 0 ;
-    FILE * fp = NULL ;
-    struct mntent * mep ;
-
-    if ( mtab && * mtab ) { fp = setmntent ( mtab, "r" ) ; }
-    if ( NULL == fp ) { fp = setmntent ( "/proc/self/mounts", "r" ) ; }
-    if ( NULL == fp ) { return 0 ; }
-
-    while ( NULL != ( mep = getmntent ( fp ) ) ) {
-      if ( path [ 0 ] == mep -> mnt_dir [ 0 ]
-        && 0 == strcmp ( mep -> mnt_dir, path ) )
-      {
-        r = 1 ;
-        break ;
-      }
-    }
-
-    endmntent ( fp ) ;
-    return r ? 1 : 0 ;
-  }
-#endif
-
-  return 0 ;
-}
-
-/* requires /proc to be mounted */
 static int is_tmpfs ( const char * const path, const char * const mtab )
 {
 #if defined (OSLinux)

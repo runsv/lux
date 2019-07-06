@@ -145,27 +145,6 @@ static int Sfstatfs ( lua_State * const L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-/* see if a given directory is a mountpoint using the mtab file */
-static int Lmtab_mount_point ( lua_State * const L )
-{
-  const char * path = luaL_checkstring ( L, 1 ) ;
-  const char * mtab =
-#if defined (OSLinux)
-    luaL_optstring ( L, 2, "/proc/self/mounts" )
-#else
-    luaL_checkstring ( L, 2 )
-#endif
-    ;
-
-  if ( path && mtab && * path && * mtab ) {
-    lua_pushboolean ( L, mtab_mount_point ( path, mtab ) ) ;
-  } else {
-    lua_pushboolean ( L, 0 ) ;
-  }
-
-  return 1 ;
-}
-
 /* returns all pseudo fs currently known to the (Linux) kernel */
 static int Lget_pseudofs ( lua_State * const L )
 {

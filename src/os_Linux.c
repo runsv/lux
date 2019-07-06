@@ -178,6 +178,43 @@ static int Sumount2 ( lua_State * const L )
   return luaL_error ( L, "integer flag bitmask and mount point paths required" ) ;
 }
 
+/* see if a given directory is a mountpoint using the mtab file
+ * requires the procfs being mounted on /proc
+ */
+#if defined (__GLIBC__)
+static int Lmtab_mount_point ( lua_State * const L )
+{
+  const char * const path = luaL_checkstring ( L, 1 ) ;
+  const char * const mtab = luaL_optstring ( L, 2, "/proc/self/mounts" ) ;
+
+  if ( path && mtab && * path && * mtab ) {
+    FILE * const fp = setmntent ( mtab, "r" ) ;
+
+    if ( fp ) {
+      char r = 0 ;
+      struct mntent * mep = NULL ;
+
+      while ( NULL != ( mep = getmntent ( fp ) ) ) {
+        if ( path [ 0 ] == mep -> mnt_dir [ 0 ]
+          && 0 == strcmp ( mep -> mnt_dir, path ) )
+        {
+          r = 1 ;
+          break ;
+        }
+      }
+
+      (void) endmntent ( fp ) ;
+      lua_pushboolean ( L, r ? 1 : 0 ) ;
+      return 1 ;
+    }
+
+    return rep_err ( L, "setmntent", errno ) ;
+  }
+
+  return luaL_error ( L, "mount point and mtab paths required" ) ;
+}
+#endif
+
 /*
  * swapo(n,ff)(2) related
  */
