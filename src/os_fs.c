@@ -145,34 +145,31 @@ static int Sfstatfs ( lua_State * const L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-static int stat_parent_dir ( struct stat * const stp, const char * const path,
-  const size_t s )
+static int stat_parent_dira ( const char * const path, const size_t s,
+  struct stat * const stp )
 {
-  char * buf = (char *) malloc ( 4 + s ) ;
+  size_t i = 0 ;
+#if defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) && ! defined (__STDC_NO_VLA__)
+  char buf [ 4 + s ] ;
+#else
+  char * buf = (char *) alloca ( 4 + s ) ;
+#endif
 
-  if ( buf ) {
-    int r = -1 ;
-    size_t i = 0 ;
-
-    for ( i = 0 ; ( s > i + 4 ) && '\0' != path [ i ] ; ++ i ) {
-      buf [ i ] = path [ i ] ;
-    }
-
-    buf [ i ++ ] = '/' ;
-    buf [ i ++ ] = '.' ;
-    buf [ i ++ ] = '.' ;
-    buf [ i ] = '\0' ;
-    r = lstat ( buf, stp ) ;
-    free ( buf ) ;
-    return r ;
+  for ( i = 0 ; ( s > i + 4 ) && '\0' != path [ i ] ; ++ i ) {
+    buf [ i ] = path [ i ] ;
   }
 
-  return -3 ;
+  buf [ i ++ ] = '/' ;
+  buf [ i ++ ] = '.' ;
+  buf [ i ++ ] = '.' ;
+  buf [ i ] = '\0' ;
+
+  return lstat ( buf, stp ) ;
 }
 
-#define MP_PATH_LEN		800
+#define MP_PATH_LEN		1000
 
-static int stat_parent_dir2 ( struct stat * const stp, const char * const path )
+static int stat_parent_dir ( const char * const path, struct stat * const stp )
 {
   size_t i = 0 ;
   char buf [ 4 + MP_PATH_LEN ] = { 0 } ;
@@ -205,17 +202,17 @@ static int is_mount_point ( const char * const path )
      */
     2 == st . st_ino
 #endif
-  )
+    )
   {
     return 1 ;
   } else {
     struct stat st2 ;
     const size_t s = strlen ( path ) ;
 
-    if ( MP_PATH_LEN < s && 0 != stat_parent_dir2 ( & st2, path ) ) {
+    if ( MP_PATH_LEN < s && 0 != stat_parent_dira ( path, s, & st2 ) ) {
       return 0 ;
     } else if ( 0 < s && MP_PATH_LEN >= s &&
-      0 != stat_parent_dir ( & st2, path, s ) )
+      0 != stat_parent_dir ( path, & st2 ) )
     {
       return 0 ;
     } 

@@ -2179,6 +2179,79 @@ static int exec_str ( char * com )
 }
 #endif
 
+static int Ldo_exec ( lua_State * L, char ** av, const unsigned int f )
+{
+  if ( 5 < f ) {
+    char * const env [ 1 ] = { (char *) NULL } ;
+    return execve ( * av, av, env ) ;
+  } else if ( 1 < f ) {
+    return execv ( * av, av ) ;
+  }
+
+  return execvp ( * av, av ) ;
+}
+
+static int Lcopy_argsa ( lua_State * L, const size_t n, const unsigned int f )
+{
+  size_t i ;
+#if defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) && ! defined (__STDC_NO_VLA__)
+  char * av [ 1 + n ] ;
+#else
+  char ** av = (char **) alloca ( 1 + n ) ;
+#endif
+
+  for ( i = 0 ; n > i ; ++ i ) {
+    char * const s = (char *) luaL_checkstring ( L, 1 + i ) ;
+
+    if ( s ) {
+      av [ i ] = s ;
+    } else {
+      return luaL_argerror ( L, 1 + i, "string arg expected" ) ;
+    }
+  }
+
+  av [ i ] = (char *) NULL ;
+  (void) Ldo_exec ( L, av, f ) ;
+  return rep_err ( L, "execve", errno ) ;
+}
+
+#define MAX_NUM_ARGS		200
+
+static int Lcopy_args ( lua_State * L, const size_t n, const unsigned int f )
+{
+  size_t i ;
+  char * av [ 1 + MAX_NUM_ARGS ] = { (char *) NULL } ;
+
+  for ( i = 0 ; n > i ; ++ i ) {
+    char * const s = (char *) luaL_checkstring ( L, 1 + i ) ;
+
+    if ( s ) {
+      av [ i ] = s ;
+    } else {
+      return luaL_argerror ( L, 1 + i, "string arg expected" ) ;
+    }
+  }
+
+  av [ i ] = (char *) NULL ;
+  (void) Ldo_exec ( L, av, f ) ;
+  return rep_err ( L, "execve", errno ) ;
+}
+
+static int Lexec ( lua_State * L, const unsigned int f )
+{
+  const size_t n = (size_t) lua_gettop ( L ) ;
+
+  if ( 1 < n ) {
+    return ( MAX_NUM_ARGS < n ) ?
+      Lcopy_argsa ( L, n, f ) :
+      Lcopy_args ( L, n, f ) ;
+  }
+
+  return luaL_error ( L, "string arguments required" ) ;
+}
+
+#undef MAX_NUM_ARGS
+
 /*
  * wrapper functions for the exec* syscalls
  */
