@@ -1509,66 +1509,33 @@ static int Sgetcwd ( lua_State * const L )
 /* wrapper function for the chdir(2) syscall */
 static int Schdir ( lua_State * const L )
 {
-  const char * dir = luaL_checkstring ( L, 1 ) ;
+  const char * const dir = luaL_checkstring ( L, 1 ) ;
 
   if ( dir && * dir ) {
-    if ( chdir ( dir ) ) {
-      const int e = errno ;
-      return luaL_error ( L, "chdir( %s ) failed: %s (errno %d)",
-        dir, strerror ( e ), e ) ;
-    }
-
-    return 0 ;
+    return res0( L, "chdir", chdir ( dir ) ) ;
   }
 
-  return luaL_argerror ( L, 1, "invalid dir path" ) ;
+  return luaL_argerror ( L, 1, "accessible dir path required" ) ;
 }
 
-/* wrapper function for fchdir */
+/* wrapper function for the fchdir(2) syscall */
 static int Sfchdir ( lua_State * const L )
 {
-  int i = luaL_checkinteger ( L, 1 ) ;
-
-  if ( 0 <= i ) {
-    int e = 0 ;
-
-    i = fchdir ( i ) ;
-    e = errno ;
-    lua_pushinteger ( L, i ) ;
-
-    if ( i ) {
-      lua_pushinteger ( L, e ) ;
-      return 2 ;
-    }
-
-    return 1 ;
-  }
-
-  return 0 ;
+  return res0( L, "fchdir", fchdir ( (int) luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
-/* wrapper function for the chroot syscall */
+/* wrapper function for the chroot(2) syscall */
 static int Schroot ( lua_State * const L )
 {
-  const char * dir = luaL_checkstring ( L , 1 ) ;
+  const char * const dir = luaL_checkstring ( L , 1 ) ;
 
-  if ( dir && * dir && is_d ( dir ) && ( 0 == chdir ( dir ) ) ) {
-    if ( chroot ( dir ) ) {
-      const int e = errno ;
-      return luaL_error ( L, "chroot( %s ) failed: %s (errno %d)",
-        dir, strerror ( e ), e ) ;
-    }
+  if ( dir && * dir ) {
+    if ( chdir ( dir ) ) { return rep_err ( L, "chdir", errno ) ; }
 
-    if ( chdir ( "/" ) ) {
-      const int e = errno ;
-      return luaL_error ( L, "chdir( / ) failed: %s (errno %d)",
-        strerror ( e ), e ) ;
-    }
-
-    return 0 ;
+    return res0( L, "chroot", chroot ( dir ) ) ;
   }
 
-  return luaL_error ( L, "accessible dir path required" ) ;
+  return luaL_argerror ( L, 1, "accessible dir path required" ) ;
 }
 
 /* wrapper function for getpriority */
