@@ -236,75 +236,39 @@ static int Sgetppid ( lua_State * const L )
 /* wrapper function for setuid */
 static int Ssetuid ( lua_State * const L )
 {
-  const uid_t u = (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-
-  if ( setuid ( u ) ) {
-    const int e = errno ;
-    return luaL_error ( L, "setuid( %d ) failed: %s (errno %d)",
-      u, strerror ( e ), e ) ;
-  }
-
-  return 0 ;
+  return res0( L, "setuid", setuid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 /* wrapper function for seteuid(2) */
 static int Sseteuid ( lua_State * const L )
 {
-  const uid_t u = (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-
-  if ( seteuid ( u ) ) {
-    const int e = errno ;
-    return luaL_error ( L, "seteuid( %d ) failed: %s (errno %d)",
-      u, strerror ( e ), e ) ;
-  }
-
-  return 0 ;
+  return res0( L, "seteuid", seteuid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 /* wrapper function for setgid(2) */
 static int Ssetgid ( lua_State * const L )
 {
-  const gid_t g = (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-
-  if ( setgid ( g ) ) {
-    const int e = errno ;
-    return luaL_error ( L, "setgid( %d ) failed: %s (errno %d)",
-      g, strerror ( e ), e ) ;
-  }
-
-  return 0 ;
+  return res0( L, "setgid", setgid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 /* wrapper function for setegid(2) */
 static int Ssetegid ( lua_State * const L )
 {
-  const gid_t g = (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-
-  if ( setegid ( g ) ) {
-    const int e = errno ;
-    return luaL_error ( L, "setegid( %d ) failed: %s (errno %d)",
-      g, strerror ( e ), e ) ;
-  }
-
-  return 0 ;
+  return res0( L, "setegid", setegid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 /* wrapper function for setreuid(2) */
 static int Ssetreuid ( lua_State * const L )
 {
-  const uid_t r = luaL_checkinteger ( L, 1 ) ;
-  const uid_t e = luaL_checkinteger ( L, 2 ) ;
-
-  return res_zero ( L, setreuid ( r, e ) ) ;
+  return res0( L, "setreuid",
+    setreuid ( luaL_checkinteger ( L, 1 ), luaL_checkinteger ( L, 2 ) ) ) ;
 }
 
 /* wrapper function for setregid(2) */
 static int Ssetregid ( lua_State * const L )
 {
-  const gid_t r = luaL_checkinteger ( L, 1 ) ;
-  const gid_t e = luaL_checkinteger ( L, 2 ) ;
-
-  return res_zero ( L, setregid ( r, e ) ) ;
+  return res0( L, "setregid",
+    setregid ( luaL_checkinteger ( L, 1 ), luaL_checkinteger ( L, 2 ) ) ) ;
 }
 
 /* wrapper function for getresuid(2) */
@@ -314,7 +278,7 @@ static int Sgetresuid ( lua_State * const L )
   uid_t r, e, s ;
 
   if ( getresuid ( & r, & e, & s ) ) {
-    return res_zero ( L, -1 ) ;
+    return rep_err ( L, "getresuid", errno ) ;
   }
 
   lua_pushinteger ( L, r ) ;
@@ -322,9 +286,7 @@ static int Sgetresuid ( lua_State * const L )
   lua_pushinteger ( L, s ) ;
   return 3 ;
 #else
-  lua_pushinteger ( L, -1 ) ;
-  lua_pushinteger ( L, ENOSYS ) ;
-  return 2 ;
+  return luaL_error ( L, "platform not supported" ) ;
 #endif
 }
 
@@ -335,7 +297,7 @@ static int Sgetresgid ( lua_State * const L )
   gid_t r, e, s ;
 
   if ( getresgid ( & r, & e, & s ) ) {
-    return res_zero ( L, -1 ) ;
+    return rep_err ( L, "getresgid", errno ) ;
   }
 
   lua_pushinteger ( L, r ) ;
@@ -343,9 +305,7 @@ static int Sgetresgid ( lua_State * const L )
   lua_pushinteger ( L, s ) ;
   return 3 ;
 #else
-  lua_pushinteger ( L, -1 ) ;
-  lua_pushinteger ( L, ENOSYS ) ;
-  return 2 ;
+  return luaL_error ( L, "platform not supported" ) ;
 #endif
 }
 
@@ -353,15 +313,10 @@ static int Sgetresgid ( lua_State * const L )
 static int Ssetresuid ( lua_State * const L )
 {
 #if (defined (OSLinux) && defined (_GNU_SOURCE)) || defined (OSfreebsd) || defined (OShpux)
-  uid_t r = luaL_checkinteger ( L, 1 ) ;
-  uid_t e = luaL_checkinteger ( L, 2 ) ;
-  uid_t s = luaL_checkinteger ( L, 3 ) ;
-
-  return res_zero ( L, setresuid ( r, e, s ) ) ;
+  return res0( L, "setresuid", setresuid ( luaL_checkinteger ( L, 1 ),
+    luaL_checkinteger ( L, 2 ), luaL_checkinteger ( L, 3 ) ) ) ;
 #else
-  lua_pushinteger ( L, -1 ) ;
-  lua_pushinteger ( L, ENOSYS ) ;
-  return 2 ;
+  return luaL_error ( L, "platform not supported" ) ;
 #endif
 }
 
@@ -369,15 +324,10 @@ static int Ssetresuid ( lua_State * const L )
 static int Ssetresgid ( lua_State * const L )
 {
 #if (defined (OSLinux) && defined (_GNU_SOURCE)) || defined (OSfreebsd) || defined (OShpux)
-  gid_t r = luaL_checkinteger ( L, 1 ) ;
-  gid_t e = luaL_checkinteger ( L, 2 ) ;
-  gid_t s = luaL_checkinteger ( L, 3 ) ;
-
-  return res_zero ( L, setresgid ( r, e, s ) ) ;
+  return res0( L, "setresgid", setresgid ( luaL_checkinteger ( L, 1 ),
+    luaL_checkinteger ( L, 2 ), luaL_checkinteger ( L, 3 ) ) ) ;
 #else
-  lua_pushinteger ( L, -1 ) ;
-  lua_pushinteger ( L, ENOSYS ) ;
-  return 2 ;
+  return luaL_error ( L, "platform not supported" ) ;
 #endif
 }
 
@@ -385,20 +335,14 @@ static int Ssetresgid ( lua_State * const L )
 /* wrapper function for setfsuid(2) */
 static int Ssetfsuid ( lua_State * const L )
 {
-  int i = luaL_checkinteger ( L, 1 ) ;
-
-  i = setfsuid ( i ) ;
-  lua_pushinteger ( L, i ) ;
+  lua_pushinteger ( L, setfsuid ( luaL_checkinteger ( L, 1 ) ) ) ;
   return 1 ;
 }
 
 /* wrapper function for setfsgid(2) */
 static int Ssetfsgid ( lua_State * const L )
 {
-  int i = luaL_checkinteger ( L, 1 ) ;
-
-  i = setfsgid ( i ) ;
-  lua_pushinteger ( L, i ) ;
+  lua_pushinteger ( L, setfsgid ( luaL_checkinteger ( L, 1 ) ) ) ;
   return 1 ;
 }
 #endif
