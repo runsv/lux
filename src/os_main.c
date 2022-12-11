@@ -4,8 +4,7 @@
  */
 
 /*
-include "common.h"
-include "pesi.h"
+#include "common.h"
 */
 
 /* constant with an unique address to use as key in the Lua registry */
@@ -164,8 +163,9 @@ static int res_zero ( lua_State * const L, const int res )
   if ( res ) {
     const int e = errno ;
     lua_pushinteger ( L, res ) ;
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
     lua_pushinteger ( L, e ) ;
-    return 2 ;
+    return 3 ;
   }
 
   lua_pushinteger ( L, 0 ) ;
@@ -177,11 +177,41 @@ static int res_lt ( lua_State * const L, const int min, const int res )
   if ( res < min ) {
     const int e = errno ;
     lua_pushinteger ( L, res ) ;
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
     lua_pushinteger ( L, e ) ;
-    return 2 ;
+    return 3 ;
   }
 
   lua_pushinteger ( L, res ) ;
+  return 1 ;
+}
+
+static int res_bool_zero ( lua_State * const L, const int res )
+{
+  if ( res ) {
+    const int e = errno ;
+    lua_pushboolean ( L, 0 ) ;
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
+  }
+
+  lua_pushboolean ( L, 1 ) ;
+  return 1 ;
+}
+
+static int res_nil ( lua_State * const L )
+{
+  const int e = errno ;
+
+  lua_pushnil ( L ) ;
+
+  if ( 0 < e ) {
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
+  }
+
   return 1 ;
 }
 
