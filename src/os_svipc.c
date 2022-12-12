@@ -6,29 +6,34 @@
  * public domain code
  */
 
+#define MSG_LEN 512
+
+typedef struct mq_msg_s {
+  long mtype ;
+  char mtext [ MSG_LEN ] ;
+} mq_msg_t ;
+
 /* wrapper for the ftok(3) SysV ipc key generator function */
 static int Sftok ( lua_State * L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {
-    int i, e = 0 ;
+    int i ;
 
     i = luaL_optinteger ( L, 2, 'A' ) ;
     i = ( 0xff & i ) ? i : 'A' ;
     i = ftok ( path, i ) ;
-    e = errno ;
-    lua_pushinteger ( L, i ) ;
 
     if ( 0 > i ) {
-      lua_pushinteger ( L, e ) ;
-      return 2 ;
+      return res_nil ( L ) ;
     }
 
+    lua_pushinteger ( L, i ) ;
     return 1 ;
   }
 
-  return 0 ;
+  return luaL_argerror ( L, 1, "path argument required" ) ;
 }
 
 /* wrapper for msgget() */
