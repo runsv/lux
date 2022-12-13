@@ -5,11 +5,10 @@
  */
 
 #include "common.h"
+#include "version.h"
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-
-#define LUX_VERSION "0.0.1.0"
 
 static const char * progname = NULL ;
 

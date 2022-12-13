@@ -84,7 +84,7 @@ static int Lgetpmsg ( lua_State * L )
   return 0 ;
 }
 
-/* ipc using SysV STREANS for Solaris */
+/* ipc using SysV STREAMS for Solaris */
 static int serv_stream ( const char * path )
 {
   if ( path && * path ) {

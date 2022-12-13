@@ -6,11 +6,10 @@
 /*
 #include "common.h"
 */
+#include "version.h"
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-
-#define LUX_VERSION "0.0.1.0"
 
 /* constant with an unique address to use as key in the Lua registry */
 static const char Key = 'K' ;
