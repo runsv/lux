@@ -1,11 +1,13 @@
+##
 ## default is to build on Linux using GNU make
+##
 
 sinclude mk/*?.mk
 
 all :	src Lua
 
-Lua :
-	cd ./Lua && $(MAKE) all
+lua :
+	cd ./lua && $(MAKE) all
 
 sh :
 	cd ./sh && $(MAKE) all
@@ -13,13 +15,13 @@ sh :
 src :
 	cd ./src && $(MAKE) all
 
-installr-exe :
+install-exe :
 	cd ./src && $(MAKE) install
 
-install-Lua :
-	cd ./Lua && $(MAKE) install
+install-lua :
+	cd ./lua && $(MAKE) install
 
-install :	install-exe install-Lua
+install :	install-exe install-lua
 
 clean :
 
@@ -30,26 +32,5 @@ test :		check
 help :
 	@echo valid make targets:
 
-###########################################################################
-
-all install uninstall clean:
-	cd src && $(MAKE) $@
-
-TAG = $(shell git describe --abbrev=0 --tags)
-VERSION = $(shell echo $(TAG) | sed s/^v//)
-FORMAT = tar.gz
-
-dist:
-	@ if [ -n "`git tag --list $(TAG)`" ]; \
-	then \
-		git archive --verbose --format=$(FORMAT) \
-		--prefix=imapfilter-$(VERSION)/ \
-		--output=imapfilter-$(VERSION).$(FORMAT) v$(VERSION); \
-		echo "Created Git archive: imapfilter-$(VERSION).$(FORMAT)"; \
-	else \
-		echo "No such tag in the Git repository: $(TAG)"; \
-	fi
-
-distclean:
-	rm -f imapfilter-*.*
-
+#all install uninstall clean:
+#	cd src && $(MAKE) $@
