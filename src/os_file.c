@@ -19,11 +19,6 @@ static int u_sync ( lua_State * const L )
   return 0 ;
 }
 
-static int u_syncfs ( lua_State * const L )
-{
-  return res_bool_zero ( L, syncfs ( luaL_checkinteger ( L, 1 ) ) ) ;
-}
-
 static int Lfsync ( lua_State * const L )
 {
   int i = -2, e = 0 ;
@@ -224,6 +219,32 @@ static int Lclobber ( lua_State * const L )
   return luaL_error ( L, "path required" ) ;
 }
 
+/* wrapper to mkdir(2) */
+static int u_mkdir ( lua_State * const L )
+{
+  const mode_t m = 00700 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
+  const char * path = luaL_checkstring ( L, 2 ) ;
+
+  if ( path && * path ) {
+    return res_bool_zero ( L, mkdir ( path, m ) ) ;
+  }
+
+  return luaL_argerror ( L, 2, "invalid dir path" ) ;
+}
+
+/* wrapper to mkfifo(3) */
+static int u_mkfifo ( lua_State * const L )
+{
+  const mode_t m = 00600 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
+  const char * path = luaL_checkstring ( L, 2 ) ;
+
+  if ( path && * path ) {
+    return res_bool_zero ( L, mkfifo ( path, m ) ) ;
+  }
+
+  return luaL_argerror ( L, 2, "invalid filename" ) ;
+}
+
 static int Lmknode ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
@@ -313,7 +334,7 @@ static int Lmknode ( lua_State * const L )
 }
 
 /* wrapper to mkfifo(3) */
-static int u_mkfifo ( lua_State * const L )
+static int m_mkfifo ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -342,7 +363,7 @@ static int u_mkfifo ( lua_State * const L )
 }
 
 /* wrapper to mkdir(2) */
-static int u_mkdir ( lua_State * const L )
+static int m_mkdir ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -480,26 +501,22 @@ static int Sremove ( lua_State * const L )
   const char * path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {
-    return res_zero ( L, remove ( path ) ) ;
-  } else {
-    return luaL_argerror ( L, 1, "empty path" ) ;
+    return res_bool_zero ( L, remove ( path ) ) ;
   }
 
-  return 0 ;
+  return luaL_argerror ( L, 1, "empty path" ) ;
 }
 
 /* wrapper to unlink(2) */
-static int Sunlink ( lua_State * const L )
+static int u_unlink ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {
-    return res_zero ( L, unlink ( path ) ) ;
-  } else {
-    return luaL_argerror ( L, 1, "empty path" ) ;
+    return res_bool_zero ( L, unlink ( path ) ) ;
   }
 
-  return 0 ;
+  return luaL_argerror ( L, 1, "empty path" ) ;
 }
 
 /* wrapper to rename */
@@ -915,7 +932,7 @@ static int Lempty_files ( lua_State * const L )
   return 0 ;
 }
 
-static int Lmunlink ( lua_State * const L )
+static int m_unlink ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -926,15 +943,20 @@ static int Lmunlink ( lua_State * const L )
     for ( i = 1 ; n >= i ; ++ i ) {
       path = luaL_checkstring ( L, i ) ;
 
-      if ( path && * path && unlink ( path ) && rmdir ( path ) ) {
-        ++ r ;
+      if ( path && * path ) {
+        if ( unlink ( path ) ) {
+          return res_false ( L ) ;
+        }
+      } else {
+        return luaL_argerror ( L, i, "invalid filename" ) ;
       }
     }
 
-    return res_zero ( L, r ) ;
+    lua_pushboolean ( L, 1 ) ;
+    return 1 ;
   }
 
-  return 0 ;
+  return luaL_error ( L, "file names required" ) ;
 }
 
 static int Lmremove ( lua_State * const L )

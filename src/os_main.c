@@ -1666,7 +1666,6 @@ static const luaL_Reg sys_func [ ] =
 
   /* functions imported from "os_file.c" : */
   { "sync",			u_sync		},
-  { "syncfs",			u_syncfs	},
   { "fsync",			Lfsync		},
   { "fdatasync",		Lfdatasync	},
   { "dirname",			Sdirname	},
@@ -1677,7 +1676,7 @@ static const luaL_Reg sys_func [ ] =
   { "realpath",			Srealpath	},
   { "truncate",			Struncate	},
   { "remove",			Sremove		},
-  { "unlink",			Sunlink		},
+  { "unlink",			u_unlink	},
   { "rename",			Srename		},
   { "chmod",			Schmod		},
   { "chown",			Schown		},
@@ -1696,7 +1695,7 @@ static const luaL_Reg sys_func [ ] =
   { "empty_file",		Lempty_file	},
   { "touch_file",		Ltouch_file	},
   { "empty_files",		Lempty_files	},
-  { "munlink",			Lmunlink	},
+  { "munlink",			u_unlink	},
   { "mremove",			Lmremove	},
   { "stat",			Sstat		},
   { "lstat",			Slstat		},
@@ -1830,6 +1829,7 @@ static const luaL_Reg sys_func [ ] =
   /* functions imported from "os_Linux.c" : */
 #if defined (OSLinux)
   /* Linux specific functions */
+  { "syncfs",			u_syncfs	},
   { "mount",			Smount		},
   { "swapon",			Sswapon		},
   { "swapoff",			Sswapoff	},
@@ -1978,6 +1978,11 @@ void regMod ( lua_State * const L, const char * const name )
 /* used as as Lua module (shared object), so luaopen_* functions
  * are needed, define them here.
  */
+int luaopen_lux ( lua_State * const L )
+{
+  return openMod ( L ) ;
+}
+
 int luaopen_sys ( lua_State * const L )
 {
   return openMod ( L ) ;
@@ -2038,62 +2043,12 @@ int luaopen_xu ( lua_State * const L )
   return openMod ( L ) ;
 }
 
-int luaopen_aix ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_bsd ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_hpux ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_irix ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_linux ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_osf ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_sun ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_sunos ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
 int luaopen_osunix ( lua_State * const L )
 {
   return openMod ( L ) ;
 }
 
 int luaopen_os_unix ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_pesi ( lua_State * const L )
-{
-  return openMod ( L ) ;
-}
-
-int luaopen_peso ( lua_State * const L )
 {
   return openMod ( L ) ;
 }

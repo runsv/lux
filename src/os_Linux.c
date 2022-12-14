@@ -4,6 +4,11 @@
  * wrapper/helper functions for Linux specific OS features
  */
 
+static int u_syncfs ( lua_State * const L )
+{
+  return res_bool_zero ( L, syncfs ( luaL_checkinteger ( L, 1 ) ) ) ;
+}
+
 static int Sgettid ( lua_State * const L )
 {
   lua_pushinteger ( L, syscall ( SYS_gettid ) ) ;
