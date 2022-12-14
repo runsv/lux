@@ -219,6 +219,21 @@ static int res_nil ( lua_State * const L )
   return 1 ;
 }
 
+static int res_false ( lua_State * const L )
+{
+  const int e = errno ;
+
+  lua_pushboolean ( L, 0 ) ;
+
+  if ( 0 < e ) {
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
+  }
+
+  return 1 ;
+}
+
 /*
 static int res_neq0 ( lua_State * const L, const int res )
 {
@@ -1650,7 +1665,8 @@ static const luaL_Reg sys_func [ ] =
   /* end of imported functions from "os_env.c" */
 
   /* functions imported from "os_file.c" : */
-  { "sync",			Ssync		},
+  { "sync",			u_sync		},
+  { "syncfs",			u_syncfs	},
   { "fsync",			Lfsync		},
   { "fdatasync",		Lfdatasync	},
   { "dirname",			Sdirname	},
@@ -1667,13 +1683,12 @@ static const luaL_Reg sys_func [ ] =
   { "chown",			Schown		},
   { "lchown",			Slchown		},
   { "mknodes",			Lmknode		},
-  { "mkfifos",			Lmkfifo		},
-  { "mkdir",			Smkdir		},
+  { "mkdir",			u_mkdir		},
   { "mkpath",			Lmkpath		},
   { "rmdir",			Srmdir		},
   { "link",			Slink		},
   { "symlink",			Ssymlink	},
-  { "mkfifo",			Smkfifo		},
+  { "mkfifo",			u_mkfifo	},
   { "mknod",			Smknod		},
   { "touch",			Ltouch		},
   { "octouch",			Loctouch	},

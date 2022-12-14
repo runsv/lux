@@ -13,10 +13,15 @@ typedef struct dir_data_s {
 /* TODO: add support for (f)utimes */
 
 /* call sync () */
-static int Ssync ( lua_State * const L )
+static int u_sync ( lua_State * const L )
 {
   sync () ;
   return 0 ;
+}
+
+static int u_syncfs ( lua_State * const L )
+{
+  return res_bool_zero ( L, syncfs ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 static int Lfsync ( lua_State * const L )
@@ -307,44 +312,37 @@ static int Lmknode ( lua_State * const L )
   return 0 ;
 }
 
-static int Lmkfifo ( lua_State * const L )
+/* wrapper to mkfifo(3) */
+static int u_mkfifo ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
-  if ( 0 < n ) {
-    int e = 0, i = 1, m = 00600 ;
-    const char * str = NULL ;
+  if ( 1 < n ) {
+    int i ;
+    const char * path = NULL ;
+    const mode_t m = 00600 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
 
-    if ( lua_isinteger ( L, 1 ) ) {
-      i = lua_tointeger ( L, 1 ) ;
-      m = ( 007777 & i ) ? i : 00600 ;
-      i = 2 ;
+    for ( i = 2 ; n >= i ; ++ i ) {
+      path = luaL_checkstring ( L, i ) ;
+
+      if ( path && * path ) {
+        if ( mkfifo ( path, m ) ) {
+          return res_false ( L ) ;
+        }
+      } else {
+        return luaL_argerror ( L, i, "invalid filename" ) ;
+      }
     }
 
-    if ( n < i ) { return 0 ; }
-
-    for ( ; n >= i ; ++ i ) {
-      str = luaL_checkstring ( L, i ) ;
-      if ( str && * str ) { e += mkfifo ( str, m ) ; }
-    }
-
-    i = e ;
-    e = errno ;
-    lua_pushinteger ( L, i ) ;
-
-    if ( i ) {
-      lua_pushinteger ( L, e ) ;
-      return 2 ;
-    }
-
+    lua_pushboolean ( L, 1 ) ;
     return 1 ;
   }
 
-  return 0 ;
+  return luaL_error ( L, "integer mode and filename args required" ) ;
 }
 
 /* wrapper to mkdir(2) */
-static int Smkdir ( lua_State * const L )
+static int u_mkdir ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -358,16 +356,20 @@ static int Smkdir ( lua_State * const L )
 
       if ( path && * path ) {
         if ( mkdir ( path, m ) ) {
+          /*
           i = errno ;
           return luaL_error ( L, "mkdir( %s, %d ) failed: %s (errno %d)",
             path, m, strerror ( i ), i ) ;
+          */
+          return res_false ( L ) ;
         }
       } else {
         return luaL_argerror ( L, i, "invalid dir name" ) ;
       }
     }
 
-    return 0 ;
+    lua_pushboolean ( L, 1 ) ;
+    return 1 ;
   }
 
   return luaL_error ( L, "integer mode and dir path args required" ) ;
@@ -644,37 +646,7 @@ static int Ssymlink ( lua_State * const L )
   return luaL_error ( L, "target and destination file names required" ) ;
 }
 
-/* wrapper to mkfifo(3) */
-static int Smkfifo ( lua_State * const L )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 1 < n ) {
-    int i ;
-    const char * path = NULL ;
-    const mode_t m = 007777 & ( 00600 | (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
-
-    for ( i = 2 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( mkfifo ( path, m ) ) {
-          i = errno ;
-          return luaL_error ( L, "mkfifo( %s, %d ) failed: %s (errno %d)",
-            path, m, strerror ( i ), i ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid file name" ) ;
-      }
-    }
-
-    return 0 ;
-  }
-
-  return luaL_error ( L, "integer mode and file name required" ) ;
-}
-
-/* create soecial files with mknod(2) */
+/* create special files with mknod(2) */
 static int Lmknod ( lua_State * const L, mode_t m )
 {
   const int n = lua_gettop ( L ) ;
