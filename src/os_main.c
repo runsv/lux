@@ -1666,8 +1666,8 @@ static const luaL_Reg sys_func [ ] =
 
   /* functions imported from "os_file.c" : */
   { "sync",			u_sync		},
-  { "fsync",			Lfsync		},
-  { "fdatasync",		Lfdatasync	},
+  { "fsync",			u_fsync		},
+  { "fdatasync",		u_fdatasync	},
   { "dirname",			Sdirname	},
   { "basename",			Sbasename	},
   { "base_name",		Lbase_name	},

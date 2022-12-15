@@ -19,76 +19,14 @@ static int u_sync ( lua_State * const L )
   return 0 ;
 }
 
-static int Lfsync ( lua_State * const L )
+static int u_fsync ( lua_State * const L )
 {
-  int i = -2, e = 0 ;
-
-  if ( 1 > lua_gettop ( L ) ) { return 0 ; }
-  else if ( lua_isinteger ( L , 1 ) ) {
-    i = lua_tointeger ( L, 1 ) ;
-    if ( 0 <= i ) {
-      i = fsync ( i ) ;
-      e = errno ;
-    }
-  } else if ( lua_isstring ( L , 1 ) ) {
-    const char * path = lua_tostring ( L, 1 ) ;
-
-    if ( NULL == path ) { return 0 ; }
-
-    if ( 0 == access ( path, F_OK | R_OK | W_OK ) ) {
-      int fd = open ( path, O_RDWR | O_CLOEXEC ) ;
-      e = errno ;
-      if ( 0 <= i ) {
-        i = fsync ( fd ) ;
-        e = errno ;
-        (void) close_fd ( fd ) ;
-      }
-    }
-  }
-
-  lua_pushinteger ( L, i ) ;
-  if ( i ) {
-    lua_pushinteger ( L, e ) ;
-    return 2 ;
-  }
-
-  return 1 ;
+  return res_bool_zero ( L, fsync ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
-static int Lfdatasync ( lua_State * const L )
+static int u_fdatasync ( lua_State * const L )
 {
-  int i = -2, e = 0 ;
-
-  if ( 1 > lua_gettop ( L ) ) { return 0 ; }
-  else if ( lua_isinteger ( L , 1 ) ) {
-    i = lua_tointeger ( L, 1 ) ;
-    if ( 0 <= i ) {
-      i = fdatasync ( i ) ;
-      e = errno ;
-    }
-  } else if ( lua_isstring ( L , 1 ) ) {
-    const char * path = lua_tostring ( L, 1 ) ;
-
-    if ( NULL == path ) { return 0 ; }
-
-    if ( 0 == access ( path, F_OK | R_OK | W_OK ) ) {
-      int fd = open ( path, O_RDWR | O_CLOEXEC ) ;
-      e = errno ;
-      if ( 0 <= i ) {
-        i = fdatasync ( fd ) ;
-        e = errno ;
-        (void) close_fd ( fd ) ;
-      }
-    }
-  }
-
-  lua_pushinteger ( L, i ) ;
-  if ( i ) {
-    lua_pushinteger ( L, e ) ;
-    return 2 ;
-  }
-
-  return 1 ;
+  return res_bool_zero ( L, fdatasync ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 /* wrapper function to dirname */
@@ -331,69 +269,6 @@ static int Lmknode ( lua_State * const L )
   }
 
   return 0 ;
-}
-
-/* wrapper to mkfifo(3) */
-static int m_mkfifo ( lua_State * const L )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 1 < n ) {
-    int i ;
-    const char * path = NULL ;
-    const mode_t m = 00600 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
-
-    for ( i = 2 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( mkfifo ( path, m ) ) {
-          return res_false ( L ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid filename" ) ;
-      }
-    }
-
-    lua_pushboolean ( L, 1 ) ;
-    return 1 ;
-  }
-
-  return luaL_error ( L, "integer mode and filename args required" ) ;
-}
-
-/* wrapper to mkdir(2) */
-static int m_mkdir ( lua_State * const L )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 1 < n ) {
-    int i ;
-    const char * path = NULL ;
-    const mode_t m = 00700 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
-
-    for ( i = 2 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( mkdir ( path, m ) ) {
-          /*
-          i = errno ;
-          return luaL_error ( L, "mkdir( %s, %d ) failed: %s (errno %d)",
-            path, m, strerror ( i ), i ) ;
-          */
-          return res_false ( L ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid dir name" ) ;
-      }
-    }
-
-    lua_pushboolean ( L, 1 ) ;
-    return 1 ;
-  }
-
-  return luaL_error ( L, "integer mode and dir path args required" ) ;
 }
 
 static int Lmkpath ( lua_State * const L )
