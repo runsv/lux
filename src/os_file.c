@@ -482,21 +482,19 @@ static int Smknod ( lua_State * const L )
 }
 
 /* wrapper to rmdir(2) */
-static int Srmdir ( lua_State * const L )
+static int u_rmdir ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {
-    return res_zero ( L, rmdir ( path ) ) ;
-  } else {
-    return luaL_argerror ( L, 1, "empty path" ) ;
+    return res_bool_zero ( L, rmdir ( path ) ) ;
   }
 
-  return 0 ;
+  return luaL_argerror ( L, 1, "empty path" ) ;
 }
 
 /* wrapper to remove(3) */
-static int Sremove ( lua_State * const L )
+static int u_remove ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
@@ -519,89 +517,69 @@ static int u_unlink ( lua_State * const L )
   return luaL_argerror ( L, 1, "empty path" ) ;
 }
 
-/* wrapper to rename */
-static int Srename ( lua_State * const L )
+/* wrapper to rename(2) */
+static int u_rename ( lua_State * const L )
 {
   const char * target = luaL_checkstring ( L, 1 ) ;
   const char * dest = luaL_checkstring ( L, 2 ) ;
 
   if ( target && dest && * target && * dest ) {
-    return res_zero ( L, rename ( target, dest ) ) ;
+    return res_bool_zero ( L, rename ( target, dest ) ) ;
   }
 
-  return 0 ;
+  return luaL_error ( L, "target and destination args required" ) ;
 }
 
 /* wrapper to chmod(2) */
-static int Schmod ( lua_State * const L )
+static int u_chmod ( lua_State * const L )
 {
-  const int n = lua_gettop ( L ) ;
+  const mode_t m = 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
+  const char * const path = luaL_checkstring ( L, 2 ) ;
 
-  if ( 1 < n ) {
-    int i ;
-    const char * path = NULL ;
-    const mode_t m = 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-
-    for ( i = 2 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( chmod ( path, m ) ) {
-          i = errno ;
-          return luaL_error ( L, "chmod( %s, %d ) failed: %s (errno %d)",
-            path, m, strerror ( i ), i ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid file name" ) ;
-      }
-    }
-
-    return 0 ;
+  if ( path && * path ) {
+    /*
+	return luaL_error ( L, "chmod( %s, %d ) failed: %s (errno %d)",
+          path, m, strerror ( i ), i ) ;
+    */
+    return res_bool_zero ( L, chmod ( path, m ) ) ;
   }
 
-  return luaL_error ( L, "integer mode and file name required" ) ;
+  return luaL_argerror ( L, 2, "invalid file name" ) ;
 }
 
-static int Lmchown ( lua_State * const L, const char f )
+static int do_chown ( lua_State * const L, const char f )
 {
-  const int n = lua_gettop ( L ) ;
+  const uid_t u = (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
+  const gid_t g = (lua_Unsigned) luaL_checkinteger ( L, 2 ) ;
+  const char * const path = luaL_checkstring ( L, 3 ) ;
 
-  if ( 2 < n ) {
-    int i ;
-    const char * path = NULL ;
-    const uid_t u = (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-    const gid_t g = (lua_Unsigned) luaL_checkinteger ( L, 2 ) ;
-
-    for ( i = 3 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( f ? chown ( path, u, g ) : lchown ( path, u, g ) ) {
-          i = errno ;
-          return luaL_error ( L, "%s( %s, %d, %d ) failed: %s (errno %d)",
-            f ? "chown" : "lchown", path, u, g, strerror ( i ), i ) ;
-        }
-      } else {
+  if ( ( 0 <= u ) && ( 0 <= g ) && path && * path ) {
+    /*
+    if ( f ? chown ( path, u, g ) : lchown ( path, u, g ) ) {
+      i = errno ;
+      return luaL_error ( L, "%s( %s, %d, %d ) failed: %s (errno %d)",
+        f ? "chown" : "lchown", path, u, g, strerror ( i ), i ) ;
+    } else {
         return luaL_argerror ( L, i, "invalid path" ) ;
-      }
     }
-
-    return 0 ;
+    */
+    return
+      res_bool_zero ( L, f ? chown ( path, u, g ) : lchown ( path, u, g ) ) ;
   }
 
   return luaL_error ( L, "valid UID, GID, and file path required" ) ;
 }
 
 /* wrapper to chown(2) */
-static int Schown ( lua_State * const L )
+static int u_chown ( lua_State * const L )
 {
-  return Lmchown ( L, 1 ) ;
+  return do_chown ( L, 1 ) ;
 }
 
 /* wrapper to lchown(2) */
-static int Slchown ( lua_State * const L )
+static int u_lchown ( lua_State * const L )
 {
-  return Lmchown ( L, 0 ) ;
+  return do_chown ( L, 0 ) ;
 }
 
 /* wrapper to fchown(2) */
@@ -622,23 +600,24 @@ static int Sfchmod ( lua_State * const L )
     return luaL_argerror ( L, 1, "invalid fd" ) ;
   }
 
-  return res_zero ( L, fchmod ( fd, m ) ) ;
+  return res_bool_zero ( L, fchmod ( fd, m ) ) ;
 }
 
 /* wrapper to link that creates hard links */
-static int Slink ( lua_State * const L )
+static int u_link ( lua_State * const L )
 {
   const char * target = luaL_checkstring ( L, 1 ) ;
   const char * dest = luaL_checkstring ( L, 2 ) ;
 
   if ( target && dest && * target && * dest ) {
+    /*
     if ( link ( target, dest ) ) {
       const int e = errno ;
       return luaL_error ( L, "link( %s, %s ) failed: %s (errno %d)",
         target, dest, strerror ( e ), e ) ;
     }
-
-    return 0 ;
+    */
+    return res_bool_zero ( L, link ( target, dest ) ) ;
   }
 
   return luaL_error ( L, "target and destination file names required" ) ;
@@ -923,55 +902,6 @@ static int Lempty_files ( lua_State * const L )
         f = open ( path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOCTTY, i ) ;
         if ( 0 > f ) { ++ r ; }
         else { (void) close_fd ( f ) ; }
-      }
-    }
-
-    return res_zero ( L, r ) ;
-  }
-
-  return 0 ;
-}
-
-static int m_unlink ( lua_State * const L )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 0 < n ) {
-    int i, r = 0 ;
-    const char * path = NULL ;
-
-    for ( i = 1 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( unlink ( path ) ) {
-          return res_false ( L ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid filename" ) ;
-      }
-    }
-
-    lua_pushboolean ( L, 1 ) ;
-    return 1 ;
-  }
-
-  return luaL_error ( L, "file names required" ) ;
-}
-
-static int Lmremove ( lua_State * const L )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 0 < n ) {
-    int i, r = 0 ;
-    const char * path = NULL ;
-
-    for ( i = 1 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path && remove ( path ) ) {
-        ++ r ;
       }
     }
 

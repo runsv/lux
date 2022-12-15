@@ -1451,12 +1451,12 @@ static int Sgetcwd ( lua_State * const L )
 }
 
 /* wrapper function for the chdir(2) syscall */
-static int Schdir ( lua_State * const L )
+static int u_chdir ( lua_State * const L )
 {
   const char * const dir = luaL_checkstring ( L, 1 ) ;
 
   if ( dir && * dir ) {
-    return res0( L, "chdir", chdir ( dir ) ) ;
+    return res_bool_zero ( L, chdir ( dir ) ) ;
   }
 
   return luaL_argerror ( L, 1, "accessible dir path required" ) ;
