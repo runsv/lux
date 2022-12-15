@@ -468,8 +468,8 @@ static int Lfchown ( lua_State * const L )
 /* wrapper to fchmod(2) */
 static int Sfchmod ( lua_State * const L )
 {
-  int fd = luaL_checkinteger ( L, 1 ) ;
-  const mode_t m = 007777 & (lua_Unsigned) luaL_checkinteger ( L, 2 ) ;
+  const mode_t m = 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
+  const int fd = luaL_checkinteger ( L, 2 ) ;
 
   if ( 0 > fd ) {
     return luaL_argerror ( L, 1, "invalid fd" ) ;
