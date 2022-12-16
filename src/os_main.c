@@ -234,23 +234,6 @@ static int res_false ( lua_State * const L )
   return 1 ;
 }
 
-/*
-static int res_neq0 ( lua_State * const L, const int res )
-{
-  return 0 ;
-}
-
-static int res_eq ( lua_State * const L, const int v, const int res )
-{
-  return 0 ;
-}
-
-static int res_neq ( lua_State * const L, const int v, const int res )
-{
-  return 0 ;
-}
-*/
-
 static int arg_is_fd ( lua_State * const L, const int index )
 {
   const int i = luaL_checkinteger ( L, index ) ;
@@ -270,6 +253,7 @@ static int arg_is_fd ( lua_State * const L, const int index )
 #include "os_io.c"
 #include "os_env.c"
 #include "os_match.c"
+#include "os_regex.c"
 #include "os_pw.c"
 #include "os_fs.c"
 #include "os_net.c"
@@ -1791,10 +1775,15 @@ static const luaL_Reg sys_func [ ] =
   { "glob",			Sglob		},
   { "wordexp",			Swordexp	},
   { "fnmatch",			Sfnmatch	},
+  /* end of imported functions from "os_match.c" */
+
+  /* functions imported from "os_regex.c" : */
   { "sregmatch",		simple_regmatch	},
   { "regmatch",			regmatch	},
   { "file_regmatch",		file_regmatch	},
-  /* end of imported functions from "os_match.c" */
+  { "grep",			l_grep		},
+  { "ncgrep",			l_ncgrep	},
+  /* end of imported functions from "os_regex.c" */
 
   /* functions imported from "os_fs.c" : */
   { "statvfs",			Sstatvfs	},
