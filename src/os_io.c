@@ -905,7 +905,7 @@ static int Lreset_term ( lua_State * L )
 }
 
 /* change the active virtual terminal */
-static int Lchvt ( lua_State * L )
+static int l_chvt ( lua_State * L )
 {
 #if defined (OSLinux)
   int e = 0, i = luaL_optinteger ( L, 1, 1 ) ;

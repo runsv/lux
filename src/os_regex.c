@@ -1,4 +1,4 @@
 /*
- * wrappers for POSIX and GNU regex functions
+ * wrappers for POSIX regex functions
  */
 

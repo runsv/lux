@@ -30,7 +30,7 @@ static int u_fdatasync ( lua_State * const L )
 }
 
 /* wrapper function to dirname */
-static int Sdirname ( lua_State * const L )
+static int u_dirname ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
@@ -39,11 +39,11 @@ static int Sdirname ( lua_State * const L )
     return 1 ;
   }
 
-  return luaL_error ( L, "path required" ) ;
+  return luaL_argerror ( L, 1, "path required" ) ;
 }
 
 /* wrapper function to basename */
-static int Sbasename ( lua_State * const L )
+static int u_basename ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
@@ -52,11 +52,11 @@ static int Sbasename ( lua_State * const L )
     return 1 ;
   }
 
-  return luaL_error ( L, "path required" ) ;
+  return luaL_argerror ( L, 1, "path required" ) ;
 }
 
 /* basename function using strrchr */
-static int Lbase_name ( lua_State * const L )
+static int l_base_name ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
@@ -73,10 +73,10 @@ static int Lbase_name ( lua_State * const L )
     return 1 ;
   }
 
-  return luaL_error ( L, "path required" ) ;
+  return luaL_argerror ( L, 1, "path required" ) ;
 }
 
-static int Ldir_name ( lua_State * const L )
+static int l_dir_name ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
@@ -88,7 +88,7 @@ static int Ldir_name ( lua_State * const L )
     return 1 ;
   }
 
-  return luaL_error ( L, "path required" ) ;
+  return luaL_argerror ( L, 1, "path required" ) ;
 }
 
 /* does a given path end with a slash ? */
@@ -183,177 +183,74 @@ static int u_mkfifo ( lua_State * const L )
   return luaL_argerror ( L, 2, "invalid filename" ) ;
 }
 
-static int Lmknode ( lua_State * const L )
+static int l_mkpath ( lua_State * const L )
 {
-  const int n = lua_gettop ( L ) ;
+  size_t s = 0 ;
+  const mode_t m = 00700 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
+  const char * path = luaL_checklstring ( L, 2, & s ) ;
 
-  if ( 1 < n ) {
-    int e = 0, i = 1, m = 000600 ;
-    dev_t d = 0 ;
-    const char * str = NULL ;
-
-    if ( lua_isinteger ( L, 1 ) ) {
-      i = lua_tointeger ( L, 1 ) ;
-      m = ( 007777 & i ) ? i : 000600 ;
-      i = 2 ;
+  if ( ( 0 < s ) && path && * path ) {
+    /*
+    if ( mkpath ( m, (char *) path, s ) ) {
+      i = errno ;
+      return luaL_error ( L, "mkpath( %s, %d ) failed: %s (errno %d)",
+        path, m, strerror ( i ), i ) ;
     }
-
-    str = luaL_checkstring ( L, i ) ;
-
-    if ( str && * str ) {
-      switch ( * str ) {
-        case 'B' :
-        case 'b' :
-          m |= S_IFBLK ;
-          if ( n >= 3 + i ) {
-            unsigned int ma = 0, mi = 0 ;
-            ma = luaL_checkinteger ( L, 1 + i ) ;
-            mi = luaL_checkinteger ( L, 2 + i ) ;
-            d = makedev ( ma, mi ) ;
-            i += 3 ;
-          } else {
-            return 0 ;
-          }
-          break ;
-        case 'C' :
-        case 'c' :
-          m |= S_IFCHR ;
-          if ( n >= 3 + i ) {
-            unsigned int ma = 0, mi = 0 ;
-            ma = luaL_checkinteger ( L, 1 + i ) ;
-            mi = luaL_checkinteger ( L, 2 + i ) ;
-            d = makedev ( ma, mi ) ;
-            i += 3 ;
-          } else {
-            return 0 ;
-          }
-          break ;
-        case 'F' :
-        case 'f' :
-          m |= S_IFIFO ;
-          ++ i ;
-          break ;
-        case 'S' :
-        case 's' :
-          m |= S_IFSOCK ;
-          ++ i ;
-          break ;
-        case 'R' :
-        case 'r' :
-        default :
-          m |= S_IFREG ;
-          ++ i ;
-          break ;
-      }
-    } else {
-      return 0 ;
-    }
-
-    if ( n < i ) { return 0 ; }
-
-    for ( ; n >= i ; ++ i ) {
-      str = luaL_checkstring ( L, i ) ;
-      if ( str && * str ) { e += mknod ( str, m, d ) ; }
-    }
-
-    i = e ;
-    e = errno ;
-    lua_pushinteger ( L, i ) ;
-
-    if ( i ) {
-      lua_pushinteger ( L, e ) ;
-      return 2 ;
-    }
-
-    return 1 ;
+    */
+    return res_bool_zero ( L, mkpath ( m, (char *) path, s ) ) ;
   }
 
-  return 0 ;
+  return luaL_argerror ( L, 1, "invalid dir name" ) ;
 }
 
-static int Lmkpath ( lua_State * const L )
+/* create special files with mknod(2) */
+static int u_mknod ( lua_State * const L )
 {
-  const int n = lua_gettop ( L ) ;
-
-  if ( 1 < n ) {
-    int i ;
-    size_t s = 0 ;
-    const char * path = NULL ;
-    const mode_t m = 00700 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
-
-    for ( i = 2 ; n >= i ; ++ i ) {
-      path = luaL_checklstring ( L, 2, & s ) ;
-
-      if ( ( 0 < s ) && path && * path ) {
-        if ( mkpath ( m, (char *) path, s ) ) {
-          i = errno ;
-          return luaL_error ( L, "mkpath( %s, %d ) failed: %s (errno %d)",
-            path, m, strerror ( i ), i ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid dir name" ) ;
-      }
-    }
-
-    return 0 ;
-  }
-
-  return luaL_error ( L, "integer mode and dir path args required" ) ;
-}
-
-/* TODO: mkbdev, mkcdev, mksock, mkfile, ... using mknod(2) */
-
-/* wrapper to mknod(2) */
-static int Smknod ( lua_State * const L )
-{
-  const int n = lua_gettop ( L ) ;
   dev_t dev = 0 ;
-  const char * dtype = NULL ;
   const char * path = luaL_checkstring ( L, 1 ) ;
-  mode_t mo = 007777 & (lua_Unsigned) luaL_checkinteger ( L, 2 ) ;
+  const char * type = luaL_checkstring ( L, 2 ) ;
+  mode_t m = (lua_Unsigned) luaL_checkinteger ( L, 3 ) ;
+  m |= 000600 ;
 
-  if ( ( 3 > n ) || ( 0 == ( path && * path ) ) ) {
-    return 0 ;
-  } else if ( lua_isinteger ( L, 3 ) ) {
-    dev = (lua_Unsigned) luaL_checkinteger ( L, 3 ) ;
-  } else if ( 0 == lua_isnumber ( L, 3 ) && lua_isstring ( L, 3 ) )
-  {
-    dtype = luaL_checkstring ( L, 3 ) ;
-  } else {
-    return 0 ;
+  if ( ! ( path && * path ) ) {
+    return luaL_argerror ( L, 1, "invalid filename" ) ;
   }
 
-  if ( dtype && * dtype && ! dev ) {
+  if ( ! ( type && * type ) ) {
+    type = "reg" ;
+  }
 
-  switch ( * dtype ) {
+  switch ( * type ) {
     case 'B' :
     case 'b' :
-      dev = S_IFBLK ;
+      m |= S_IFBLK ;
+      dev = makedev (
+        (lua_Unsigned) luaL_checkinteger ( L, 4 ),
+        (lua_Unsigned) luaL_checkinteger ( L, 5 ) ) ;
       break ;
     case 'C' :
     case 'c' :
-      dev = S_IFCHR ;
+      m |= S_IFCHR ;
+      dev = makedev (
+        (lua_Unsigned) luaL_checkinteger ( L, 4 ),
+        (lua_Unsigned) luaL_checkinteger ( L, 5 ) ) ;
       break ;
     case 'F' :
     case 'f' :
-      dev = S_IFIFO ;
-      break ;
-    case 'R' :
-    case 'r' :
-      dev = S_IFREG ;
+      m |= S_IFIFO ;
       break ;
     case 'S' :
     case 's' :
-      dev = S_IFSOCK ;
+      m |= S_IFSOCK ;
       break ;
+    case 'R' :
+    case 'r' :
     default :
-      dev = S_IFREG ;
+      m |= S_IFREG ;
       break ;
   }
 
-  } /* end if */
-
-  return res_zero ( L, mknod ( path, mo, dev ) ) ;
+  return res_bool_zero ( L, mknod ( path, m, dev ) ) ;
 }
 
 /* wrapper to rmdir(2) */
@@ -517,98 +414,6 @@ static int Ssymlink ( lua_State * const L )
   return luaL_error ( L, "target and destination file names required" ) ;
 }
 
-/* create special files with mknod(2) */
-static int Lmknod ( lua_State * const L, mode_t m )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 1 < n ) {
-    int i ;
-    const char * path = NULL ;
-    m |= 00600 ;
-    m |= 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-
-    for ( i = 2 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( mknod ( path, m, 0 ) ) {
-          i = errno ;
-          return luaL_error ( L, "mknod( %s, %d ) failed: %s (errno %d)",
-            path, m, strerror ( i ), i ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid file name" ) ;
-      }
-    }
-
-    return 0 ;
-  }
-
-  return luaL_error ( L, "integer mode and file name required" ) ;
-}
-
-/* create (block or character) device soecial files with mknod(2) */
-static int Lmkdev ( lua_State * const L, mode_t m )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 3 < n ) {
-    int i ;
-    const char * path = NULL ;
-    const unsigned int maj = (lua_Unsigned) luaL_checkinteger ( L, 2 ) ;
-    const unsigned int min = (lua_Unsigned) luaL_checkinteger ( L, 3 ) ;
-    const dev_t d = makedev( maj, min ) ;
-    m |= 00600 ;
-    m |= 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-
-    for ( i = 4 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        if ( mknod ( path, m, d ) ) {
-          i = errno ;
-          return luaL_error ( L, "mknod( %s, %d, %d, %d ) failed: %s (errno %d)",
-            path, m, maj, min, strerror ( i ), i ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid file name" ) ;
-      }
-    }
-
-    return 0 ;
-  }
-
-  return luaL_error ( L,
-    "integer mode, major and minor device numbers, and file name required" ) ;
-}
-
-/* create fifos with mknod(2) */
-static int Lmknfifo ( lua_State * const L )
-{
-  return Lmknod ( L, S_IFIFO ) ;
-}
-
-static int Lmkreg ( lua_State * const L )
-{
-  return Lmknod ( L, S_IFREG ) ;
-}
-
-static int Lmksock ( lua_State * const L )
-{
-  return Lmknod ( L, S_IFSOCK ) ;
-}
-
-static int Lmkbdev ( lua_State * const L )
-{
-  return Lmkdev ( L, S_IFBLK ) ;
-}
-
-static int Lmkcdev ( lua_State * const L )
-{
-  return Lmkdev ( L, S_IFCHR ) ;
-}
-
 /* wrapper function for the truncate syscall */
 static int Struncate ( lua_State * const L )
 {
@@ -658,7 +463,7 @@ static int Sftruncate ( lua_State * const L )
   return 0 ;
 }
 
-/* touch(1) like function that uses mknod() */
+/* touch(1) like function that uses mknod(2) */
 static int Ltouch ( lua_State * const L )
 {
   int i = -3 ;

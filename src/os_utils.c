@@ -149,6 +149,7 @@ static int Lget_urandom_int ( lua_State * L )
   return 1 ;
 }
 
+#if 0
 /* check if a given pidfile exists and contains a valid pid */
 static int Lcheck_pidfile ( lua_State * L )
 {
@@ -184,6 +185,7 @@ static int Lcheck_pidfile ( lua_State * L )
   lua_pushinteger ( L, -3 ) ;
   return 1 ;
 }
+#endif
 
 /*
 #ifdef OSLinux

@@ -1668,10 +1668,10 @@ static const luaL_Reg sys_func [ ] =
   { "sync",			u_sync		},
   { "fsync",			u_fsync		},
   { "fdatasync",		u_fdatasync	},
-  { "dirname",			Sdirname	},
-  { "basename",			Sbasename	},
-  { "base_name",		Lbase_name	},
-  { "dir_name",		        Ldir_name	},
+  { "dirname",			u_dirname	},
+  { "basename",			u_basename	},
+  { "base_name",		l_base_name	},
+  { "dir_name",		        l_dir_name	},
   { "ends_with_slash",		Lends_with_slash	},
   { "realpath",			Srealpath	},
   { "truncate",			Struncate	},
@@ -1681,14 +1681,13 @@ static const luaL_Reg sys_func [ ] =
   { "chmod",			u_chmod		},
   { "chown",			u_chown		},
   { "lchown",			u_lchown	},
-  { "mknodes",			Lmknode		},
   { "mkdir",			u_mkdir		},
-  { "mkpath",			Lmkpath		},
+  { "mkpath",			l_mkpath	},
   { "rmdir",			u_rmdir		},
   { "link",			u_link		},
   { "symlink",			Ssymlink	},
   { "mkfifo",			u_mkfifo	},
-  { "mknod",			Smknod		},
+  { "mknod",			u_mknod		},
   { "touch",			Ltouch		},
   { "octouch",			Loctouch	},
   { "create",			Lcreate		},
@@ -1771,7 +1770,7 @@ static const luaL_Reg sys_func [ ] =
   { "puts",			Sputs	},
   { "fileno",			Lfileno	},
   { "fdopen",			Lfdopen	},
-  { "chvt",			Lchvt	},
+  { "chvt",			l_chvt	},
 #if defined (OSLinux)
   { "memfd_create",		Smemfd_create	},
 #endif
@@ -1816,7 +1815,6 @@ static const luaL_Reg sys_func [ ] =
   /* functions imported from "os_utils.c" : */
   { "init_urandom",		Linit_urandom		},
   { "get_urandom_int",		Lget_urandom_int	},
-  { "check_pidfile",		Lcheck_pidfile		},
   /* end of imported functions from "os_utils.c" */
 
   /* functions imported from "os_gen.c" : */
