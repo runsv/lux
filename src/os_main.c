@@ -445,66 +445,40 @@ static int subarr ( lua_State * const L )
   return 1 ;
 }
 
-/* try to parse the given octal integer literal strings as integers */
-static int Lstr2i ( lua_State * const L, const int b )
+/* try to parse the given integer literal string as integer */
+static int l_str2i ( lua_State * const L )
 {
-  const int n = lua_gettop ( L ) ;
+  const char * const str = luaL_checkstring ( L, 1 ) ;
 
-  if ( 0 < n ) {
-    int i ;
+  if ( str && * str ) {
+    int e = 0 ;
+    long i = 0 ;
+    const char * end = NULL ;
+    int base = luaL_optinteger ( L, 2, 0 ) ;
 
-    for ( i = 1 ; n >= i ; ++ i ) {
-      const char * const s = luaL_checkstring ( L, i ) ;
-
-      if ( s && * s ) {
-        const lua_Integer u = str2i ( b, s ) ;
-
-        if ( 0 > u ) {
-          return luaL_argerror ( L, i, "string is no integer literal for given base" ) ;
-        }
-
-        lua_pushinteger ( L, u ) ;
-        lua_replace ( L, i ) ;
-      } else {
-        return luaL_argerror ( L, i, "illegal integer literal string" ) ;
-      }
+    if ( 0 > base || 36 < base ) {
+      return luaL_argerror ( L, 2, "invalid representation base" ) ;
     }
 
-    return n ;
-  }
+    errno = 0 ;
+    i = strtol ( str, & end, base ) ;
+    e = errno ;
+    lua_pushinteger ( L, i ) ;
 
-  return luaL_error ( L, "base %d integer literal string required", b ) ;
-}
-
-static int Lstr2int ( lua_State * const L )
-{
-  if ( 1 < lua_gettop ( L ) ) {
-    const int b = (int) luaL_checkinteger ( L, 1 ) ;
-    lua_pop ( L, 1 ) ;
-
-    if ( 1 < b && 37 > b ) {
-      return Lstr2i ( L, b ) ;
+    if ( e ) {
+      (void) lua_pushstring ( L, strerror ( e ) ) ;
+      lua_pushinteger ( L, e ) ;
+      return 3 ;
+    } else if ( str == end ) {
+      (void) lua_pushfstring ( L,
+        "string \"%s\" contains no base %d digits", str, base ) ;
+      return 2 ;
     }
 
-    return luaL_error ( L, "illegal representation base %d", b ) ;
+    return 1 ;
   }
 
-  return luaL_error ( L, "representation base and integer literal string args required" ) ;
-}
-
-static int Lstr2bi ( lua_State * const L )
-{
-  return Lstr2i ( L, 2 ) ;
-}
-
-static int Lstr2oi ( lua_State * const L )
-{
-  return Lstr2i ( L, 8 ) ;
-}
-
-static int Lstr2xi ( lua_State * const L )
-{
-  return Lstr2i ( L, 16 ) ;
+  return luaL_argerror ( L, 1, "integer literal string required" ) ;
 }
 
 /* convert a string consisting of on octal integer literal
@@ -1780,7 +1754,6 @@ static const luaL_Reg sys_func [ ] =
   /* functions imported from "os_regex.c" : */
   { "sregmatch",		simple_regmatch	},
   { "regmatch",			regmatch	},
-  { "file_regmatch",		file_regmatch	},
   { "grep",			l_grep		},
   { "ncgrep",			l_ncgrep	},
   /* end of imported functions from "os_regex.c" */
@@ -1853,10 +1826,7 @@ static const luaL_Reg sys_func [ ] =
   { "bitrshift",		Lbitrshift	},
   { "add",			add		},
   { "subarr",			subarr		},
-  { "str2int",			Lstr2int	},
-  { "str2bi",			Lstr2bi		},
-  { "str2oi",			Lstr2oi		},
-  { "str2xi",			Lstr2xi		},
+  { "str2int",			l_str2i		},
   { "octintstr",		Loctintstr	},
   { "chomp",			Lchomp		},
   { "get_errno",		get_errno	},

@@ -2,46 +2,40 @@
  * (POSIX) regex related functions
  */
 
-/* upper limit of the number of saved regex subexpression matches */
+/* upper limit for the number of saved regex subexpression matches */
 #define NSUB	64
 
-/* wrapper function that uses the posix regex API */
+/* See if a given string contains/matches the given regex pattern.
+ * Does not return matching substrings. It only returns true
+ * (string contains a matching substring) or false.
+ */
 static int simple_regmatch ( lua_State * L )
 {
-  int r = 0 ;
-  regex_t preg ;
-  const char * re = luaL_checkstring ( L, 1 ) ;
+  const char * pat = luaL_checkstring ( L, 1 ) ;
   const char * str = luaL_checkstring ( L, 2 ) ;
 
-  if ( 0 == ( re && str ) ) {
-    lua_pushboolean ( L, 0 ) ;
+  if ( pat && str && * pat && * str ) {
+    regex_t preg ;
+    int r = regcomp ( & preg, pat, REG_NOSUB | REG_EXTENDED ) ;
+
+    if ( r ) {
+      /* pattern failed to compile */
+      char errbuf [ 256 ] = { 0 } ;
+      (void) regerror ( r, & preg, errbuf, sizeof ( errbuf ) - 1 ) ;
+      regfree ( & preg ) ;
+      lua_pushboolean ( L, 0 ) ;
+      (void) lua_pushstring ( L, errbuf ) ;
+      lua_pushinteger ( L, r ) ;
+      return 3 ;
+    }
+
+    r = regexec ( & preg, str, 0, NULL, 0 ) ;
+    regfree ( & preg ) ;
+    lua_pushboolean ( L, r ? 0 : 1 ) ;
     return 1 ;
   }
 
-  r = regcomp ( & preg, re, REG_NOSUB | REG_EXTENDED ) ;
-
-  if ( r ) {
-    /* pattern failed to compile */
-    char errbuf [ 128 ] = { 0 } ;
-    r = regerror ( r, & preg, errbuf, 127 ) ;
-    regfree ( & preg ) ;
-    lua_pushboolean ( L, 0 ) ;
-    (void) lua_pushstring ( L, errbuf ) ;
-    return 2 ;
-  }
-
-  r = regexec ( & preg, str, 0, NULL, 0 ) ;
-  regfree ( & preg ) ;
-
-  if ( r ) {
-    /* no match or error */
-    lua_pushboolean ( L, 0 ) ;
-  } else {
-    /* pattern matched string */
-    lua_pushboolean ( L, 1 ) ;
-  }
-
-  return 1 ;
+  return luaL_error ( L, "regex pattern and string arguments required" ) ;
 }
 
 /* regex wrapper function that returns (substring) matches */
@@ -108,71 +102,9 @@ static int regmatch ( lua_State * L )
   return 0 ;
 }
 
-/* searches a given pattern in a file (like grep -q) */
-static int file_regmatch ( lua_State * L )
-{
-  int r = 0, res = 0 ;
-  FILE * fp = NULL ;
-  regex_t re ;
-  char buf [ 128 ] = { 0 } ;
-  const char * file = luaL_checkstring ( L, 1 ) ;
-  const char * pat = luaL_checkstring ( L, 2 ) ;
-
-  fp = fopen ( file, "r" ) ;
-  if ( NULL == fp ) {
-    lua_pushboolean ( L, 0 ) ;
-    return 1 ;
-  }
-
-  r = regcomp( & re, pat, REG_NOSUB | REG_EXTENDED ) ;
-  if ( r ) {
-    /* pattern failed to compile */
-    /*
-    if ( fclose( fp ) ) {
-      perror( "fclose failed" ) ;
-    }
-    */
-    r = fclose ( fp ) ;
-    r = regerror ( r, & re, buf, 127 ) ;
-    regfree ( & re ) ;
-    lua_pushboolean ( L, 0 ) ;
-    (void) lua_pushstring ( L, buf ) ;
-    return 2 ;
-  } else {
-    size_t s ;
-
-    while ( fgets ( buf, 127, fp ) ) {
-      /* some /proc files have \0 separated content so we have to
-       * loop through the whole buffer buf */
-      s = 0 ;
-      do {
-        if ( 0 == regexec ( & re, buf + s, 0, NULL, 0 ) ) {
-          res = 1 ;
-          goto found ;
-        }
-
-        s += 1 + strlen ( buf ) ;
-        /* len is the size of allocated buffer and we don't
-         * want call regexec BUFSIZE times. find next str */
-        while ( ( 126 > s ) && '\0' == buf [ s ] ) { ++ s ; }
-
-      } while ( 126 > s ) ;
-    }
-  }
-
-  res = 0 ;
-
-found :
-  r = fclose ( fp ) ;
-  regfree ( & re ) ;
-  lua_pushboolean ( L, res ) ;
-
-  return 1 ;
-}
-
 /* matches a given POSIX regex pattern against a given string */
-static int rex_match ( lua_State * L, const char * pat,
-  const char * str, int f )
+static int rex_match ( lua_State * L, const char * const pat,
+  const char * const str, int f, int f2 )
 {
   if ( pat && str && * pat && * str ) {
     int i = 0 ;
@@ -180,38 +112,64 @@ static int rex_match ( lua_State * L, const char * pat,
 
     /* always use extended POSIX regex matching */
     f |= REG_EXTENDED ;
-    /* zero out the regex_t struct first so it can safely regfree()ed
-     * later (even if regcomp() failed to compile it)
-     */
-    (void) memset ( & re, 0, sizeof ( regex_t ) ) ;
     i = regcomp ( & re, pat, f ) ;
 
-    if ( 0 == i ) {
-      regmatch_t pmatch [ 1 + NSUB ] ;
+    if ( i ) {
+      /* the regex pattern failed to compile */
+      char buf [ 256 ] = { 0 } ;
 
-      /* zero out the pattern match array first */
-      (void) memset ( pmatch, 0, sizeof ( pmatch ) ) ;
-      i = regexec ( & re, str, 1 + NSUB, pmatch, 0 ) ;
-
-      if ( 0 == i ) {
-        regfree ( & re ) ;
-        lua_pushboolean ( L, 1 ) ;
-        return 1 ;
-      }
-    }
-
-    lua_pushnil ( L ) ;
-    {
-      char buf [ 128 ] = { 0 } ;
       (void) regerror ( i, & re, buf, sizeof ( buf ) - 1 ) ;
       /* is that ok for a non compiling pattern ? */
       regfree ( & re ) ;
+      (void) lua_pushnil ( L ) ;
       (void) lua_pushstring ( L, buf ) ;
+      (void) lua_pushinteger ( L, i ) ;
+      return 3 ;
+    } else {
+      const char * s = str ;
+      regoff_t off, len ;
+      regmatch_t pmatch [ 1 + NSUB ] ;
+      i = 0 ;
+
+      while ( 0 == regexec ( & re, s, ARRAY_SIZE( pmatch ), pmatch, f2 ) )
+      {
+        int j = 0 ;
+
+        if ( 0 == i ) {
+          lua_newtable ( L ) ;
+        }
+
+        off = pmatch [ 0 ] . rm_so + ( s - str ) ;
+        len = pmatch [ 0 ] . rm_eo - pmatch [ 0 ] . rm_so ;
+	/*
+  printf("#%d:\n", i);
+  printf("offset = %jd; length = %jd\n", (intmax_t) off, (intmax_t) len);
+  printf("substring = \"%.*s\"\n", len, s + pmatch[0].rm_so);
+        */
+        (void) lua_pushlstring ( L, s + pmatch [ 0 ] . rm_so, len ) ;
+        lua_rawseti ( L, -2, 1 + i ) ;
+
+        for ( j = 1 ; NSUB >= j ; ++ j ) {
+          if ( 0 > pmatch [ j ] . rm_so ) { break ; }
+          len = pmatch [ j ] . rm_eo - pmatch [ j ] . rm_so ;
+          (void) lua_pushlstring ( L, s + pmatch [ j ] . rm_so, len ) ;
+          lua_rawseti ( L, -2, 1 + i + j ) ;
+        }
+
+        s += pmatch [ 0 ] . rm_eo ;
+        ++ i ;
+      }
+
+      if ( 0 < i ) {
+      } else {
+        lua_pushnil ( L ) ;
+      }
+
+      return 1 ;
     }
-    return 2 ;
   }
 
-  return 0 ;
+  return luaL_error ( L, "regex pattern and string required" ) ;
 }
 
 /* case insensitive regex match */
@@ -227,7 +185,7 @@ static int l_ncgrep ( lua_State * L )
       i = 0 ;
       i = luaL_optinteger ( L, 3, REG_ICASE ) ;
       i |= REG_EXTENDED | REG_ICASE ;
-      return rex_match ( L, pat, str, i ) ; 
+      return rex_match ( L, pat, str, i, 0 ) ;
     } else {
       return luaL_error ( L, "invalid string args" ) ;
     }
@@ -249,7 +207,7 @@ static int l_grep ( lua_State * L )
       i = 0 ;
       i = luaL_optinteger ( L, 3, 0 ) ;
       i |= REG_EXTENDED ;
-      return rex_match ( L, pat, str, i ) ;
+      return rex_match ( L, pat, str, i, 0 ) ;
     } else {
       return luaL_error ( L, "invalid string args" ) ;
     }
