@@ -38,72 +38,8 @@ static int simple_regmatch ( lua_State * L )
   return luaL_error ( L, "regex pattern and string arguments required" ) ;
 }
 
-/* regex wrapper function that returns (substring) matches */
-/* TODO: complete it */
-static int regmatch ( lua_State * L )
-{
-  int r = 0 ;
-  regex_t preg ;
-  const char * re = luaL_checkstring ( L, 1 ) ;
-  const char * str = luaL_checkstring ( L, 2 ) ;
-
-  if ( ! ( re && str ) ) {
-    lua_pushboolean ( L, 0 ) ;
-    return 1 ;
-  }
-
-  r = regcomp ( & preg, re, REG_EXTENDED ) ;
-
-  if ( r ) {
-    /* pattern failed to compile */
-    char errbuf [ 128 ] = { 0 } ;
-    r = regerror ( r, & preg, errbuf, 127 ) ;
-    regfree ( & preg ) ;
-    lua_pushboolean ( L, 0 ) ;
-    (void) lua_pushstring ( L, errbuf ) ;
-    return 2 ;
-  } else {
-    regmatch_t pmatch ;
-    r = regexec ( & preg, str, 1, & pmatch, 0 ) ;
-    regfree ( & preg ) ;
-
-    if ( r ) {
-      /* no match or error */
-      lua_pushboolean ( L, 0 ) ;
-      return 1 ;
-    } else if ( 0 <= pmatch . rm_so ) {
-      /* pattern matched string */
-      luaL_Buffer b ;
-      lua_pushboolean ( L, 1 ) ;
-      luaL_buffinit ( L, & b ) ;
-      luaL_addlstring ( & b, str + pmatch . rm_so,
-        pmatch . rm_eo - pmatch . rm_so ) ;
-      luaL_addchar ( & b, '\0' ) ;
-      luaL_pushresult ( & b ) ;
-      return 2 ;
-#if 0
-      int i, j = 0 ;
-      lua_pushboolean ( L, 1 ) ;
-      for ( i = 0 ; i < 16 ; ++ i ) {
-        if ( 0 <= pmatch [ i ] . rm_so ) {
-          ++ j ;
-          (void) lua_pushstring ( L, str ) ;
-        }
-      } /* end for */
-      lua_pushinteger ( L, j ) ;
-#endif
-    } else {
-      /* pattern matched string */
-      lua_pushboolean ( L, 1 ) ;
-      return 1 ;
-    }
-  }
-
-  return 0 ;
-}
-
 /* matches a given POSIX regex pattern against a given string */
-static int rex_match ( lua_State * L, const char * const pat,
+static int regmatch ( lua_State * L, const char * const pat,
   const char * const str, int f, int f2 )
 {
   if ( pat && str && * pat && * str ) {
@@ -126,6 +62,7 @@ static int rex_match ( lua_State * L, const char * const pat,
       (void) lua_pushinteger ( L, i ) ;
       return 3 ;
     } else {
+      int idx = 1 ;
       const char * s = str ;
       regoff_t off, len ;
       regmatch_t pmatch [ 1 + NSUB ] ;
@@ -139,29 +76,25 @@ static int rex_match ( lua_State * L, const char * const pat,
           lua_newtable ( L ) ;
         }
 
-        off = pmatch [ 0 ] . rm_so + ( s - str ) ;
-        len = pmatch [ 0 ] . rm_eo - pmatch [ 0 ] . rm_so ;
-	/*
-  printf("#%d:\n", i);
-  printf("offset = %jd; length = %jd\n", (intmax_t) off, (intmax_t) len);
-  printf("substring = \"%.*s\"\n", len, s + pmatch[0].rm_so);
-        */
-        (void) lua_pushlstring ( L, s + pmatch [ 0 ] . rm_so, len ) ;
-        lua_rawseti ( L, -2, 1 + i ) ;
-
-        for ( j = 1 ; NSUB >= j ; ++ j ) {
+        for ( j = 0 ; NSUB >= j ; ++ j ) {
           if ( 0 > pmatch [ j ] . rm_so ) { break ; }
+          off = pmatch [ j ] . rm_so + ( s - str ) ;
           len = pmatch [ j ] . rm_eo - pmatch [ j ] . rm_so ;
+        /*
+        printf("offset = %jd; length = %jd\n", (intmax_t) off, (intmax_t) len) ;
+        printf("substring = \"%.*s\"\n", len, s + pmatch[0].rm_so) ;
+        */
           (void) lua_pushlstring ( L, s + pmatch [ j ] . rm_so, len ) ;
-          lua_rawseti ( L, -2, 1 + i + j ) ;
+          lua_rawseti ( L, -2, idx ++ ) ;
         }
 
         s += pmatch [ 0 ] . rm_eo ;
         ++ i ;
       }
 
-      if ( 0 < i ) {
-      } else {
+      regfree ( & re ) ;
+
+      if ( 1 > i ) {
         lua_pushnil ( L ) ;
       }
 
@@ -185,7 +118,7 @@ static int l_ncgrep ( lua_State * L )
       i = 0 ;
       i = luaL_optinteger ( L, 3, REG_ICASE ) ;
       i |= REG_EXTENDED | REG_ICASE ;
-      return rex_match ( L, pat, str, i, 0 ) ;
+      return regmatch ( L, pat, str, i, 0 ) ;
     } else {
       return luaL_error ( L, "invalid string args" ) ;
     }
@@ -207,7 +140,7 @@ static int l_grep ( lua_State * L )
       i = 0 ;
       i = luaL_optinteger ( L, 3, 0 ) ;
       i |= REG_EXTENDED ;
-      return rex_match ( L, pat, str, i, 0 ) ;
+      return regmatch ( L, pat, str, i, 0 ) ;
     } else {
       return luaL_error ( L, "invalid string args" ) ;
     }

@@ -47,6 +47,22 @@ static int Sgettid ( lua_State * const L )
 # define RB_KEXEC		0x45584543
 #endif
 
+static void add_reboot_flags ( lua_State * const L )
+{
+  L_ADD_CONST( L, RB_AUTOBOOT )
+  L_ADD_CONST( L, RB_HALT_SYSTEM )
+  L_ADD_CONST( L, RB_POWER_OFF )
+  L_ADD_CONST( L, RB_DISABLE_CAD )
+  L_ADD_CONST( L, RB_ENABLE_CAD )
+  L_ADD_CONST( L, RB_SW_SUSPEND )
+  L_ADD_CONST( L, RB_KEXEC )
+}
+
+static int u_reboot ( lua_State * const L )
+{
+  return res_bool_zero ( L, reboot ( luaL_checkinteger ( L, 1 ) ) ) ;
+}
+
 static int Lsys_reboot ( lua_State * const L )
 {
   sync () ;
@@ -92,13 +108,8 @@ static int Lsys_sak_on ( lua_State * const L )
  */
 
 /* constants used by mount(2) */
-static int Lget_mount_flags ( lua_State * const L )
+static void add_mount_flags ( lua_State * const L )
 {
-  /* create a new table holding the constants (names as keys)
-   * and their values
-   */
-  lua_newtable ( L ) ;
-
   L_ADD_CONST( L, MS_REMOUNT )
   L_ADD_CONST( L, MS_MOVE )
   L_ADD_CONST( L, MS_BIND )
@@ -120,9 +131,6 @@ static int Lget_mount_flags ( lua_State * const L )
   L_ADD_CONST( L, MS_SILENT )
   L_ADD_CONST( L, MS_STRICTATIME )
   L_ADD_CONST( L, MS_SYNCHRONOUS )
-
-  /* return this table */
-  return 1 ;
 }
 
 /* wrapper function for the mount(2) syscall */
@@ -144,16 +152,12 @@ static int Smount ( lua_State * const L )
 }
 
 /* constants used by umount2(2) */
-static int Lget_umount2_flags ( lua_State * const L )
+static void add_umount2_flags ( lua_State * const L )
 {
-  lua_newtable ( L ) ;
-
   L_ADD_CONST( L, MNT_DETACH )
   L_ADD_CONST( L, MNT_EXPIRE )
   L_ADD_CONST( L, MNT_FORCE )
   L_ADD_CONST( L, UMOUNT_NOFOLLOW )
-
-  return 1 ;
 }
 
 /* wrapper function for the umount2(2) syscall */
@@ -251,20 +255,16 @@ static int Sswapoff ( lua_State * const L )
 }
 
 /* constants used by swapon(2) */
-static int Lget_swapon_flags ( lua_State * const L )
+static void add_swapon_flags ( lua_State * const L )
 {
-  lua_newtable ( L ) ;
-
   L_ADD_CONST( L, SWAP_FLAG_DISCARD )
   L_ADD_CONST( L, SWAP_FLAG_PREFER )
   L_ADD_CONST( L, SWAP_FLAG_PRIO_MASK )
   L_ADD_CONST( L, SWAP_FLAG_PRIO_SHIFT )
-
-  return 1 ;
 }
 
 /* wrapper function for the swapon(2) syscall */
-static int Sswapon ( lua_State * const L )
+static int u_swapon ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -446,7 +446,7 @@ static int Scapset ( lua_State * const L )
  */
 
 /* make the result(s) of the sysinfo(2) function available to Lua code */
-static int Ssysinfo ( lua_State * const L )
+static int u_sysinfo ( lua_State * const L )
 {
   struct sysinfo si ;
 

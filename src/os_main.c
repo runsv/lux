@@ -118,16 +118,48 @@ static int Losnotsup ( lua_State * const L )
     ) ;
 }
 
+static int push_error ( lua_State * L, const int err, const char * fun,
+  const char * what )
+{
+  int c = 0 ;
+  const int n = lua_gettop ( L ) ;
+
+  while ( ( c = * what ++ ) ) {
+    switch ( c ) {
+      case '~' :
+        lua_pushnil ( L ) ;
+        break ;
+      case '#' :
+        lua_pushinteger ( L, err ) ;
+        break ;
+      case '$' :
+        (void) lua_pushfstring ( L,
+          "%s() failed: %s (errno %d)",
+          fun, strerror ( err ), err ) ;
+        break ;
+      case '0':
+        lua_pushboolean ( L, 0 ) ;
+        break ;
+    }
+  }
+
+  return lua_gettop ( L ) - n ;
+}
+
 /* helper function that reports already occurred posix errors */
 static int rep_err ( lua_State * const L, const char * const func, int e )
 {
   e = ( 0 < e ) ? e : 0 ;
+  lua_pushboolean ( L, 0 ) ;
 
   if ( func && * func ) {
-    return luaL_error ( L, "%s() failed: %s (errno %d)", func, strerror ( e ), e ) ;
+    (void) lua_pushfstring ( L, "%s() failed: %s (errno %d)", func, strerror ( e ), e ) ;
+  } else {
+    (void) lua_pushfstring ( L, "syscall failed: %s (errno %d)", strerror ( e ), e ) ;
   }
 
-  return luaL_error ( L, "syscall failed: %s (errno %d)", strerror ( e ), e ) ;
+  lua_pushinteger ( L, e ) ;
+  return 3 ;
 }
 
 /* helper function that reports errors stored in errno
@@ -138,15 +170,20 @@ static int chk_res ( lua_State * const L, const char * const func, const int c )
   if ( c ) {
     int e = errno ;
     e = ( 0 < e ) ? e : 0 ;
+    lua_pushboolean ( L, 0 ) ;
 
     if ( func && * func ) {
-      return luaL_error ( L, "%s() failed: %s (errno %d)", func, strerror ( e ), e ) ;
+      (void) lua_pushfstring ( L, "%s() failed: %s (errno %d)", func, strerror ( e ), e ) ;
+    } else {
+      (void) lua_pushfstring ( L, "syscall failed: %s (errno %d)", strerror ( e ), e ) ;
     }
 
-    return luaL_error ( L, "syscall failed: %s (errno %d)", strerror ( e ), e ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
   }
 
-  return 0 ;
+  lua_pushboolean ( L, 1 ) ;
+  return 1 ;
 }
 
 #define res0( L, m, r ) chk_res ( L, m, 0 == ( r ) )
@@ -446,17 +483,17 @@ static int subarr ( lua_State * const L )
 }
 
 /* try to parse the given integer literal string as integer */
-static int l_str2i ( lua_State * const L )
+static int l_strtoi ( lua_State * const L )
 {
   const char * const str = luaL_checkstring ( L, 1 ) ;
 
   if ( str && * str ) {
     int e = 0 ;
-    long i = 0 ;
+    long int i = 0 ;
     const char * end = NULL ;
     int base = luaL_optinteger ( L, 2, 0 ) ;
 
-    if ( 0 > base || 36 < base ) {
+    if ( ( 1 == base ) || ( 0 > base ) || ( 36 < base ) ) {
       return luaL_argerror ( L, 2, "invalid representation base" ) ;
     }
 
@@ -469,9 +506,18 @@ static int l_str2i ( lua_State * const L )
       (void) lua_pushstring ( L, strerror ( e ) ) ;
       lua_pushinteger ( L, e ) ;
       return 3 ;
-    } else if ( str == end ) {
+    }
+
+    if ( str == end ) {
       (void) lua_pushfstring ( L,
-        "string \"%s\" contains no base %d digits", str, base ) ;
+        "String \"%s\" contains no base %d digits", str, base ) ;
+      return 2 ;
+    }
+
+    if ( '\0' != * end ) {
+      (void) lua_pushfstring ( L,
+        "String \"%s\" contains further characters after number: \"%s\"",
+       	str, end ) ;
       return 2 ;
     }
 
@@ -706,12 +752,7 @@ static int Sacct ( lua_State * const L )
 {
   const char * fname = luaL_optstring ( L, 1, NULL ) ;
 
-  if ( acct ( fname ) ) {
-    const int e = errno ;
-    return luaL_error ( L, "acct() failed: %s (errno %d)", strerror ( e ), e ) ;
-  }
-
-  return 0 ;
+  return res_bool_zero ( L, acct ( fname ) ) ;
 }
 
 /* wrapper to quotactl */
@@ -1267,6 +1308,14 @@ static void add_const ( lua_State * const L )
 
   /* constants for Linux syscalls */
 #if defined (OSLinux)
+  /* constants used by mount(2) */
+  add_mount_flags ( L ) ;
+  /* constants used by umount2(2) */
+  add_umount2_flags ( L ) ;
+  /* constants used by swapon(2) */
+  add_swapon_flags ( L ) ;
+  /* constants used by reboot(2) */
+  add_reboot_flags ( L ) ;
   /* constants for the clone/unshare(2) Linux syscalls */
   L_ADD_CONST( L, CLONE_FILES )
   L_ADD_CONST( L, CLONE_FS )
@@ -1753,7 +1802,6 @@ static const luaL_Reg sys_func [ ] =
 
   /* functions imported from "os_regex.c" : */
   { "sregmatch",		simple_regmatch	},
-  { "regmatch",			regmatch	},
   { "grep",			l_grep		},
   { "ncgrep",			l_ncgrep	},
   /* end of imported functions from "os_regex.c" */
@@ -1787,9 +1835,10 @@ static const luaL_Reg sys_func [ ] =
   /* functions imported from "os_Linux.c" : */
 #if defined (OSLinux)
   /* Linux specific functions */
+  { "reboot",			u_reboot	},
   { "syncfs",			u_syncfs	},
   { "mount",			Smount		},
-  { "swapon",			Sswapon		},
+  { "swapon",			u_swapon	},
   { "swapoff",			Sswapoff	},
   { "gettid",			Sgettid		},
   { "unshare",			Sunshare	},
@@ -1798,7 +1847,7 @@ static const luaL_Reg sys_func [ ] =
   { "set_name_space",		Lsetns		},
   { "capget",			Scapget		},
   { "capset",			Scapset		},
-  { "sysinfo",			Ssysinfo	},
+  { "sysinfo",			u_sysinfo	},
   { "load_module",		Lload_module	},
   { "setup_iface_lo",		Lsetup_iface_lo		},
   /*
@@ -1826,7 +1875,7 @@ static const luaL_Reg sys_func [ ] =
   { "bitrshift",		Lbitrshift	},
   { "add",			add		},
   { "subarr",			subarr		},
-  { "str2int",			l_str2i		},
+  { "strtoi",			l_strtoi	},
   { "octintstr",		Loctintstr	},
   { "chomp",			Lchomp		},
   { "get_errno",		get_errno	},
