@@ -64,13 +64,13 @@ static int regmatch ( lua_State * L, const char * const pat,
     } else {
       int idx = 1 ;
       const char * s = str ;
-      regoff_t off, len ;
       regmatch_t pmatch [ 1 + NSUB ] ;
       i = 0 ;
 
       while ( 0 == regexec ( & re, s, ARRAY_SIZE( pmatch ), pmatch, f2 ) )
       {
         int j = 0 ;
+        regoff_t len ;
 
         if ( 0 == i ) {
           lua_newtable ( L ) ;
@@ -78,12 +78,11 @@ static int regmatch ( lua_State * L, const char * const pat,
 
         for ( j = 0 ; NSUB >= j ; ++ j ) {
           if ( 0 > pmatch [ j ] . rm_so ) { break ; }
-          off = pmatch [ j ] . rm_so + ( s - str ) ;
+
           len = pmatch [ j ] . rm_eo - pmatch [ j ] . rm_so ;
-        /*
-        printf("offset = %jd; length = %jd\n", (intmax_t) off, (intmax_t) len) ;
-        printf("substring = \"%.*s\"\n", len, s + pmatch[0].rm_so) ;
-        */
+          /*
+          off = pmatch [ j ] . rm_so + ( s - str ) ;
+          */
           (void) lua_pushlstring ( L, s + pmatch [ j ] . rm_so, len ) ;
           lua_rawseti ( L, -2, idx ++ ) ;
         }

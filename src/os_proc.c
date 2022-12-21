@@ -1373,7 +1373,7 @@ static int Sgetitimer ( lua_State * const L )
 static int Ssetitimer ( lua_State * const L )
 {
   int i = 0, e = 0, r = 0 ;
-  struct itimerval it ;
+  struct itimerval it, it2 ;
   const int n = lua_gettop ( L ) ;
 
   if ( 2 > n ) { return 0 ; }
@@ -1383,7 +1383,7 @@ static int Ssetitimer ( lua_State * const L )
   e = errno ;
   r = luaL_checkinteger ( L, 2 ) ;
   it . it_value . tv_sec = r ;
-  r = setitimer ( i, & it, & it ) ;
+  r = setitimer ( i, & it, & it2 ) ;
   e = errno ;
   lua_pushinteger ( L, r ) ;
   lua_pushinteger ( L, e ) ;
@@ -1396,45 +1396,12 @@ static int Ssetitimer ( lua_State * const L )
 }
 
 /* wrapper function for getcwd */
-static int Sgetcwd ( lua_State * const L )
+static int u_getcwd ( lua_State * const L )
 {
   int e = 0 ;
   char * cwd = NULL ;
 
   {
-    char buf [ 512 ] = { 0 } ;
-    cwd = getcwd ( buf, sizeof ( buf ) - 1 ) ;
-    e = errno ;
-
-    if ( cwd ) {
-      (void) lua_pushstring ( L, buf ) ;
-      return 1 ;
-    }
-  }
-
-  if ( NULL == cwd && ERANGE == e ) {
-    char buf [ 1024 ] = { 0 } ;
-    cwd = getcwd ( buf, sizeof ( buf ) - 1 ) ;
-    e = errno ;
-
-    if ( cwd ) {
-      (void) lua_pushstring ( L, buf ) ;
-      return 1 ;
-    }
-  }
-
-  if ( NULL == cwd && ERANGE == e ) {
-    char buf [ 2048 ] = { 0 } ;
-    cwd = getcwd ( buf, sizeof ( buf ) - 1 ) ;
-    e = errno ;
-
-    if ( cwd ) {
-      (void) lua_pushstring ( L, buf ) ;
-      return 1 ;
-    }
-  }
-
-  if ( NULL == cwd && ERANGE == e ) {
     char buf [ 1 + PATH_MAX ] = { 0 } ;
     cwd = getcwd ( buf, sizeof ( buf ) - 1 ) ;
     e = errno ;
@@ -1445,9 +1412,16 @@ static int Sgetcwd ( lua_State * const L )
     }
   }
 
-  lua_pushnil ( L ) ;
-  lua_pushinteger ( L, e ) ;
-  return 2 ;
+  /* dir path length exceeds buffer size */
+  /*
+  if ( NULL == cwd && ERANGE == e ) {
+    luaL_Buffer b ;
+    luaL_buffinitsize ( L, & b, 1 + 2 * PATH_MAX ) ;
+    luaL_pushresultsize ( & b, 1 + 2 * PATH_MAX ) ;
+  }
+  */
+
+  return res_nil ( L ) ;
 }
 
 /* wrapper function for the chdir(2) syscall */

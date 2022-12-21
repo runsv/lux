@@ -107,7 +107,7 @@ static ssize_t print2fd ( int fd, const char * const msg )
  * helper functions for all other Lua wrapper functions
  */
 
-static int Losnotsup ( lua_State * const L )
+static int l_os_not_sup ( lua_State * const L )
 {
   return luaL_error ( L,
 #ifdef OS
@@ -293,7 +293,10 @@ static int arg_is_fd ( lua_State * const L, const int index )
 #include "os_regex.c"
 #include "os_pw.c"
 #include "os_fs.c"
+#include "os_socket.c"
+/*
 #include "os_net.c"
+*/
 #include "os_utils.c"
 #include "os_gen.c"
 
@@ -490,7 +493,7 @@ static int l_strtoi ( lua_State * const L )
   if ( str && * str ) {
     int e = 0 ;
     long int i = 0 ;
-    const char * end = NULL ;
+    char * end = NULL ;
     int base = luaL_optinteger ( L, 2, 0 ) ;
 
     if ( ( 1 == base ) || ( 0 > base ) || ( 36 < base ) ) {
@@ -502,7 +505,7 @@ static int l_strtoi ( lua_State * const L )
     e = errno ;
     lua_pushinteger ( L, i ) ;
 
-    if ( e ) {
+    if ( 0 < e ) {
       (void) lua_pushstring ( L, strerror ( e ) ) ;
       lua_pushinteger ( L, e ) ;
       return 3 ;
@@ -1210,28 +1213,8 @@ static void add_const ( lua_State * const L )
   L_ADD_CONST( L, SIGRTMAX )
 #endif
 
-  /* socket constants */
-  L_ADD_CONST( L, AF_UNIX )
-  L_ADD_CONST( L, AF_LOCAL )
-  L_ADD_CONST( L, AF_INET )
-  L_ADD_CONST( L, AF_INET6 )
-  L_ADD_CONST( L, AF_IPX )
-  L_ADD_CONST( L, AF_NETLINK )
-  L_ADD_CONST( L, AF_X25 )
-  L_ADD_CONST( L, AF_AX25 )
-  L_ADD_CONST( L, AF_ATMPVC )
-  L_ADD_CONST( L, AF_PACKET )
-  L_ADD_CONST( L, AF_ALG )
-  L_ADD_CONST( L, AF_APPLETALK )
-  L_ADD_CONST( L, SOCK_STREAM )
-  L_ADD_CONST( L, SOCK_DGRAM )
-  L_ADD_CONST( L, SOCK_SEQPACKET )
-  L_ADD_CONST( L, SOCK_RAW )
-  L_ADD_CONST( L, SOCK_RDM )
-  L_ADD_CONST( L, SOCK_PACKET )
-  L_ADD_CONST( L, SOCK_NONBLOCK )
-  L_ADD_CONST( L, SOCK_CLOEXEC )
-  L_ADD_CONST( L, SO_KEEPALIVE )
+  /* socket(2) constants */
+  add_socket_flags ( L ) ;
 
   /* constants used by syslog() */
   /* options */
@@ -1310,12 +1293,16 @@ static void add_const ( lua_State * const L )
 #if defined (OSLinux)
   /* constants used by mount(2) */
   add_mount_flags ( L ) ;
+
   /* constants used by umount2(2) */
   add_umount2_flags ( L ) ;
+
   /* constants used by swapon(2) */
   add_swapon_flags ( L ) ;
+
   /* constants used by reboot(2) */
   add_reboot_flags ( L ) ;
+
   /* constants for the clone/unshare(2) Linux syscalls */
   L_ADD_CONST( L, CLONE_FILES )
   L_ADD_CONST( L, CLONE_FS )
@@ -1544,7 +1531,7 @@ static const luaL_Reg sys_func [ ] =
   { "xfork",			Lxfork		},
   { "chroot",			Schroot		},
   { "chdir",			u_chdir		},
-  { "getcwd",			Sgetcwd		},
+  { "getcwd",			u_getcwd	},
   { "fchdir",			Sfchdir		},
   { "daemon",			Sdaemon		},
   { "execl",			Lexecl		},
@@ -1579,8 +1566,10 @@ static const luaL_Reg sys_func [ ] =
   { "tzset",			Stzset		},
   { "tzget",			Ltzget		},
   { "time",			Stime		},
+  /*
   { "stime",			Sstime		},
   { "ftime",			Sftime		},
+  */
   { "gettimeofday",		Sgettimeofday	},
   { "settimeofday",		Ssettimeofday	},
   { "ctime",			Sctime		},
@@ -1761,7 +1750,9 @@ static const luaL_Reg sys_func [ ] =
   { "pipe",			Spipe	},
   { "open_pipe",		Lpipe	},
   { "stream_pipe",		Lstream_pipe	},
+  /*
   { "socketpair",		Ssocketpair	},
+  */
   { "fd_has_data",		Lfd_has_data	},
   { "fds_have_data",		Lfds_have_data	},
   { "wait_for_fd_data",		Lwait_for_fd_data	},
@@ -1801,6 +1792,7 @@ static const luaL_Reg sys_func [ ] =
   /* end of imported functions from "os_match.c" */
 
   /* functions imported from "os_regex.c" : */
+  { "simple_regmatch",		simple_regmatch	},
   { "sregmatch",		simple_regmatch	},
   { "grep",			l_grep		},
   { "ncgrep",			l_ncgrep	},
@@ -1815,11 +1807,18 @@ static const luaL_Reg sys_func [ ] =
   { "is_mount_point",		Lmountpoint	},
   /* end of imported functions from "os_fs.c" */
 
-  /* functions imported from "os_net.c" : */
+  /* functions imported from "os_socket.c": */
+  { "socket",			u_socket	},
+  { "socketpair",		u_socketpair	},
+  /* end of imported functions from "os_socket.c" */
+
+  /* functions imported from "os_net.c": */
+  /*
   { "if_up",			Lif_up		},
   { "if_down",			Lif_down	},
   { "route_add_netmask",	Lroute_add_netmask	},
   { "route_add_defgw",		Lroute_add_defgw	},
+  */
   /* end of imported functions from "os_net.c" */
 
   /* functions imported from "os_utils.c" : */
@@ -1836,27 +1835,34 @@ static const luaL_Reg sys_func [ ] =
 #if defined (OSLinux)
   /* Linux specific functions */
   { "reboot",			u_reboot	},
+  { "sys_reboot",		l_sys_reboot	},
+  { "sys_halt",			l_sys_halt	},
+  { "sys_poweroff",		l_sys_poweroff	},
+  { "sys_hibernate",		l_sys_hibernate	},
+  { "sys_kexec",		l_sys_kexec	},
+  { "sys_sak_off",		l_sys_sak_off	},
+  { "sys_sak_on",		l_sys_sak_on	},
   { "syncfs",			u_syncfs	},
-  { "mount",			Smount		},
+  { "mount",			u_mount		},
   { "swapon",			u_swapon	},
-  { "swapoff",			Sswapoff	},
+  { "swapoff",			u_swapoff	},
   { "gettid",			Sgettid		},
-  { "unshare",			Sunshare	},
-  { "setns",			Ssetns		},
-  { "set_ns",			Lsetns		},
-  { "set_name_space",		Lsetns		},
+  { "unshare",			u_unshare	},
+  { "setns",			u_setns		},
   { "capget",			Scapget		},
   { "capset",			Scapset		},
   { "sysinfo",			u_sysinfo	},
-  { "load_module",		Lload_module	},
-  { "setup_iface_lo",		Lsetup_iface_lo		},
   /*
-  { "get_pseudofs",		Lget_pseudofs	},
-  { "cgroup_level",		Lcgroup_level	},
+  { "set_ns",			l_setns		},
+  { "set_name_space",		l_setns		},
+  { "load_module",		l_load_module	},
+  { "setup_iface_lo",		l_setup_iface_lo	},
+  { "get_pseudofs",		l_get_pseudofs	},
+  { "cgroup_level",		l_cgroup_level	},
   */
 # if defined (__GLIBC__)
-  { "mtab_mount_point",		Lmtab_mount_point	},
-  { "is_mtab_mount_point",	Lmtab_mount_point	},
+  { "mtab_mount_point",		l_mtab_mount_point	},
+  { "is_mtab_mount_point",	l_mtab_mount_point	},
 # endif
 #endif
   /* end of imported functions from "os_Linux.c" */

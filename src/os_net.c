@@ -2,6 +2,35 @@
  * functions to configure/shutdown network interfaces
  */
 
+/* enable the loopback interface */
+static int l_setup_iface_lo ( lua_State * const L )
+{
+#if 0
+  int i = socket ( PF_INET, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_IP ) ;
+
+  if ( 0 > i ) {
+    i = errno ;
+    return luaL_error ( L, "socket() failed: %s (errno %d)",
+      strerror ( i ), i ) ;
+  } else {
+    struct sockaddr_in ifaddr ;
+    struct ifreq ipreq ;
+
+    ifaddr . sin_family = AF_INET ;
+    /* 127.0.0.1 */
+    ifaddr . sin_addr = 16777343 ;
+    ipreq . ifr_name = "lo" ;
+    ipreq . ifr_addr = * ( (struct sockaddr *) & ifaddr ) ;
+    (void) ioctl ( i, SIOCSIFADDR, & ipreq ) ;
+    ipreq . ifr_flags = IFF_UP | IFF_LOOPBACK | IFF_RUNNING ;
+    (void) ioctl ( i, SIOCSIFFLAGS, & ipreq ) ;
+    (void) close_fd ( i ) ;
+  }
+#endif
+
+  return 0 ;
+}
+
 #if 0
 /* network commands of general utility */
 struct ifconfigtable {
@@ -413,11 +442,4 @@ static int Lroute_add_defgw ( lua_State * L )
   return luaL_error ( L, "OS not supported" ) ;
 #endif
 }
-
-/*
-static int Lroute_delete ( lua_State * L )
-{
-  return 0 ;
-}
-*/
 

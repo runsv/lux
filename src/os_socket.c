@@ -4,35 +4,78 @@
  * public domain code
  */
 
-static int Ssocket ( lua_State * L )
+static void add_socket_flags ( lua_State * const L )
 {
-  int i = luaL_checkinteger ( L, 1 ) ;
-  int t = luaL_checkinteger ( L, 2 ) ;
-  int p = luaL_optinteger ( L, 3, 0 ) ;
+  /* communication domains */
+  L_ADD_CONST( L, AF_ALG )
+  L_ADD_CONST( L, AF_APPLETALK )
+  L_ADD_CONST( L, AF_ATMPVC )
+  L_ADD_CONST( L, AF_AX25 )
+  L_ADD_CONST( L, AF_UNIX )
+  L_ADD_CONST( L, AF_LOCAL )
+  L_ADD_CONST( L, AF_INET )
+  L_ADD_CONST( L, AF_INET6 )
+  L_ADD_CONST( L, AF_IPX )
+  L_ADD_CONST( L, AF_KEY )
+  L_ADD_CONST( L, AF_NETLINK )
+  L_ADD_CONST( L, AF_PACKET )
+  L_ADD_CONST( L, AF_X25 )
 
-  i = socket ( i, t, p ) ;
-  p = errno ;
-  lua_pushinteger ( L, i ) ;
+  /* socket types */
+  L_ADD_CONST( L, SOCK_DGRAM )
+  L_ADD_CONST( L, SOCK_PACKET )
+  L_ADD_CONST( L, SOCK_RAW )
+  L_ADD_CONST( L, SOCK_RDM )
+  L_ADD_CONST( L, SOCK_SEQPACKET )
+  L_ADD_CONST( L, SOCK_STREAM )
+  L_ADD_CONST( L, SOCK_CLOEXEC )
+  L_ADD_CONST( L, SOCK_NONBLOCK )
+  L_ADD_CONST( L, SO_KEEPALIVE )
+}
 
-  if ( 0 > i ) {
-    lua_pushinteger ( L, p ) ;
-    return 2 ;
+static int u_socketpair ( lua_State * const L )
+{
+  int sv [ 2 ] ;
+
+  if ( socketpair (
+    luaL_checkinteger ( L, 1 ),
+    luaL_checkinteger ( L, 2 ),
+    luaL_optinteger ( L, 3, 0 ),
+    sv ) )
+  {
+    return res_nil ( L ) ;
   }
 
+  lua_newtable ( L ) ;
+  lua_pushinteger ( L, sv [ 0 ] ) ;
+  lua_rawseti ( L, -2, 1 ) ;
+  lua_pushinteger ( L, sv [ 1 ] ) ;
+  lua_rawseti ( L, -2, 2 ) ;
+
   return 1 ;
 }
 
-static int Lbind_unix_sock ( lua_State * L )
+static int u_socket ( lua_State * const L )
+{
+  const int fd = socket (
+    luaL_checkinteger ( L, 1 ),
+    luaL_checkinteger ( L, 2 ),
+    luaL_optinteger ( L, 3, 0 ) ) ;
+
+  if ( 0 > fd ) {
+    return res_nil ( L ) ;
+  }
+
+  lua_pushinteger ( L, fd ) ;
+  return 1 ;
+}
+
+static int u_bind ( lua_State * const L )
 {
   return 1 ;
 }
 
-static int Lbind_abstract ( lua_State * L )
-{
-  return 1 ;
-}
-
-static int Slisten ( lua_State * L )
+static int u_listen ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   int e = luaL_optinteger ( L, 2, 5 ) ;
@@ -50,73 +93,12 @@ static int Slisten ( lua_State * L )
   return 1 ;
 }
 
-static int sock_connect ( const char * path )
+static int u_accept ( lua_State * const L )
 {
-  if ( path && * path ) {
-    int i = 0, fd = -3 ;
-    struct sockaddr_un serv_ad ;
-
-    /* zero out the address struct before use */
-    (void) memset ( & serv_ad, 0, sizeof ( serv_ad ) ) ;
-    serv_ad . sun_family = AF_UNIX ;
-#if defined (OSLinux)
-    /* Linux: a leading NUL makes the unix domain socket abstract */
-    serv_ad . sun_path [ 0 ] = '\0' ;
-    (void) strncpy ( 1 + serv_ad . sun_path, path,
-      sizeof ( serv_ad . sun_path ) - 2 ) ;
-    fd = socket ( AF_UNIX,
-      SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0 ) ;
-#else
-    (void) umask ( 00077 ) ;
-    (void) strncpy ( serv_ad . sun_path, path,
-      sizeof ( serv_ad . sun_path ) - 1 ) ;
-    fd = socket ( AF_UNIX, SOCK_STREAM, 0 ) ;
-#endif
-    if ( 0 > fd ) { return -3 ; }
-    (void) fcntl ( fd, F_SETFD, FD_CLOEXEC ) ;
-    (void) fcntl ( fd, F_SETFL, O_NONBLOCK ) ;
-    /* set up credential passing for the socket where possible */
-#if defined (OSLinux)
-    i = 3 ;
-    (void) setsockopt ( fd, SOL_SOCKET, SO_PASSCRED, & i, sizeof ( i ) ) ;
-#elif defined (OSsolaris)
-#elif defined (OSdragonfly)
-#elif defined (OSfreebsd)
-#elif defined (OSnetbsd)
-#elif defined (OSopenbsd)
-#else
-#endif
-    i = getuid () ;
-    if ( 1 > i ) { (void) umask ( 00022 ) ; }
-    i = connect ( fd, & serv_ad, sizeof ( serv_ad ) ) ;
-    if ( i ) {
-      return -11 ;
-    } else {
-      return fd ;
-    }
-  }
-
-  return -1 ;
+  return 1 ;
 }
 
-static int Lsock_connect ( lua_State * L )
-{
-  const char * path = luaL_checkstring ( L, 1 ) ;
-  const char * msg = luaL_checkstring ( L, 2 ) ;
-
-  if ( path && msg && * path && * msg ) {
-    if ( i ) {
-      lua_pushinteger ( i ) ;
-      return 1 ;
-    } else {
-    }
-
-    return fd ;
-  }
-
-  return 0 ;
-}
-
+#if 0
 /* sets up the (Linux: abstract) unix domain socket the server
  * listens on for client requests
  */
@@ -306,21 +288,6 @@ static int Lsetup_sup_Linux ( lua_State * L )
   return 3 ;
 }
 
-static int Lsetup_sock ( lua_State * L )
-{
-  const char * path = luaL_checkstring ( L, 1 ) ;
-
-  if ( path && * path ) {
-    const int i = serv_sock ( path ) ;
-    sockfd = i ;
-    lua_pushinteger ( L, i ) ;
-    return 1 ;
-  }
-
-  return 0 ;
-}
-
-/* check requests on the socket */
 /* Linux: abstract unix domain socket address:
  * if sysinit: "\0/pesi/sys"
  * else : "\0/pesi/userUID/pidPID"
@@ -348,46 +315,5 @@ static int Lcheck_sock ( lua_State * L )
   return 0 ;
 }
 
-/* send back a reply to clients connected via socket */
-static int LserverRep ( lua_State * L )
-{
-  int i = luaL_checkinteger ( L, 1 )
-  const char * msg = luaL_checkstring ( L, 2 ) ;
-
-  i = ( 0 > i ) ? cfd : i ;
-  if ( ( 0 <= sockfd ) && msg && * msg ) {
-  }
-
-  if ( 0 <= i ) { close_fd ( i ) ; }
-
-  return 0 ;
-}
-
-static int Lpoll_nfd_in ( lua_State * L )
-{
-  int i ;
-  struct pollfd pfd [ 3 ] ;
-
-  pfd [ 0 ] . events = POLLIN ;
-  pfd [ 1 ] . events = POLLIN ;
-  pfd [ 2 ] . events = POLLIN ;
-  pfd [ 0 ] . fd = sigfd ;
-  pfd [ 1 ] . fd = sockfd ;
-  pfd [ 2 ] . fd = mqfd ;
-  i = luaL_optinteger ( L, 1, 5000 ) ;
-  i = ( 1000 > i ) ? 5000 : i ;
-  i = poll ( pfd, 3, i ) ;
-
-  if ( 0 > i ) {
-    i = errno ;
-    lua_pushinteger ( L, i ) ;
-    return 2 ;
-  } else if ( 0 == i ) {
-    lua_pushinteger ( L, 0 ) ;
-    return 1 ;
-  } else if ( 0 < i ) {
-  }
-
-  return 0 ;
-}
+#endif /* #if 0 */
 

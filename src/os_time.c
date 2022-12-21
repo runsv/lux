@@ -47,6 +47,7 @@ static int Stime ( lua_State * L )
   return 1 ;
 }
 
+/* stime() is deprecated
 static int Sstime ( lua_State * L )
 {
   time_t t = luaL_checkinteger ( L, 1 ) ;
@@ -57,6 +58,7 @@ static int Sstime ( lua_State * L )
 
   return luaL_argerror ( L, 1, "non negative integer required" ) ;
 }
+*/
 
 static int Sctime ( lua_State * L )
 {
@@ -71,6 +73,7 @@ static int Sctime ( lua_State * L )
   return 0 ;
 }
 
+/*
 static int Sftime ( lua_State * L )
 {
   struct timeb tb ;
@@ -82,6 +85,7 @@ static int Sftime ( lua_State * L )
   lua_pushinteger ( L, tb . dstflag ) ;
   return 4 ;
 }
+*/
 
 static int Sclock ( lua_State * L )
 {

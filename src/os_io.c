@@ -389,6 +389,7 @@ static int Lpipe ( lua_State * L )
   return 2 ;
 }
 
+/*
 static int Ssocketpair ( lua_State * L )
 {
   int i, p [ 2 ] ;
@@ -415,6 +416,7 @@ static int Ssocketpair ( lua_State * L )
 
   return 2 ;
 }
+*/
 
 static int Lstream_pipe ( lua_State * L )
 {
