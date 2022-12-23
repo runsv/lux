@@ -3,7 +3,7 @@
  */
 
 /* upper limit for the number of saved regex subexpression matches */
-#define NSUB	64
+#define NSUB	100
 
 /* See if a given string contains/matches the given regex pattern.
  * Does not return matching substrings. It only returns true
@@ -55,7 +55,7 @@ static int regmatch ( lua_State * L, const char * const pat,
       char buf [ 256 ] = { 0 } ;
 
       (void) regerror ( i, & re, buf, sizeof ( buf ) - 1 ) ;
-      /* is that ok for a non compiling pattern ? */
+      /* is that ok for a non compiling pattern? */
       regfree ( & re ) ;
       (void) lua_pushnil ( L ) ;
       (void) lua_pushstring ( L, buf ) ;

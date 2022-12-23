@@ -1137,27 +1137,6 @@ static int Snanosleep ( lua_State * const L )
   return res_zero ( L, i ) ;
 }
 
-/* wrapper function for the alarm(2) syscall */
-static int Salarm ( lua_State * const L )
-{
-  lua_pushinteger ( L, (lua_Unsigned) alarm (
-    (lua_Unsigned) luaL_checkinteger ( L, 1 )
-  ) ) ;
-
-  return 1 ;
-}
-
-/* wrapper function for the ualarm(3) syscall */
-static int Sualarm ( lua_State * const L )
-{
-  lua_pushinteger ( L, (lua_Unsigned) ualarm (
-    (lua_Unsigned) luaL_checkinteger ( L, 1 ),
-    (lua_Unsigned) luaL_optinteger ( L, 2, 0 )
-  ) ) ;
-
-  return 1 ;
-}
-
 /* wrapper function for the wait(2) syscall */
 static int Swait ( lua_State * const L )
 {
@@ -1350,61 +1329,14 @@ static int Lis_subreaper ( lua_State * const L )
   return 1 ;
 }
 
-/* wrapper function for getitimer */
-static int Sgetitimer ( lua_State * const L )
-{
-  int i = 0, e = 0 ;
-  struct itimerval it ;
-
-  i = luaL_checkinteger ( L, 1 ) ;
-  i = getitimer ( i, & it ) ;
-  e = errno ;
-  lua_pushinteger ( L, i ) ;
-  lua_pushinteger ( L, e ) ;
-  lua_pushinteger ( L, it . it_interval . tv_sec ) ;
-  lua_pushinteger ( L, it . it_interval . tv_usec ) ;
-  lua_pushinteger ( L, it . it_value . tv_sec ) ;
-  lua_pushinteger ( L, it . it_value . tv_usec ) ;
-
-  return 6 ;
-}
-
-/* wrapper function for setitimer */
-static int Ssetitimer ( lua_State * const L )
-{
-  int i = 0, e = 0, r = 0 ;
-  struct itimerval it, it2 ;
-  const int n = lua_gettop ( L ) ;
-
-  if ( 2 > n ) { return 0 ; }
-
-  i = luaL_checkinteger ( L, 1 ) ;
-  r = getitimer ( i, & it ) ;
-  e = errno ;
-  r = luaL_checkinteger ( L, 2 ) ;
-  it . it_value . tv_sec = r ;
-  r = setitimer ( i, & it, & it2 ) ;
-  e = errno ;
-  lua_pushinteger ( L, r ) ;
-  lua_pushinteger ( L, e ) ;
-  lua_pushinteger ( L, it . it_interval . tv_sec ) ;
-  lua_pushinteger ( L, it . it_interval . tv_usec ) ;
-  lua_pushinteger ( L, it . it_value . tv_sec ) ;
-  lua_pushinteger ( L, it . it_value . tv_usec ) ;
-
-  return 6 ;
-}
-
 /* wrapper function for getcwd */
 static int u_getcwd ( lua_State * const L )
 {
-  int e = 0 ;
   char * cwd = NULL ;
 
   {
     char buf [ 1 + PATH_MAX ] = { 0 } ;
     cwd = getcwd ( buf, sizeof ( buf ) - 1 ) ;
-    e = errno ;
 
     if ( cwd ) {
       (void) lua_pushstring ( L, buf ) ;

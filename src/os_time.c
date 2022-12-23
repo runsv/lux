@@ -1,7 +1,81 @@
 /*
  * time related wrapper functions
- * ADD: clock_gettime
+ * ADD: clock_gettime, timer_settimer etc
  */
+
+/* wrapper function for the alarm(2) syscall */
+static int u_alarm ( lua_State * const L )
+{
+  lua_pushinteger ( L, (lua_Unsigned) alarm (
+    (lua_Unsigned) luaL_checkinteger ( L, 1 )
+  ) ) ;
+
+  return 1 ;
+}
+
+/* wrapper function for the ualarm(3) syscall */
+static int u_ualarm ( lua_State * const L )
+{
+  lua_pushinteger ( L, (lua_Unsigned) ualarm (
+    (lua_Unsigned) luaL_checkinteger ( L, 1 ),
+    (lua_Unsigned) luaL_optinteger ( L, 2, 0 )
+  ) ) ;
+
+  return 1 ;
+}
+
+/* wrapper function for getitimer */
+static int u_getitimer ( lua_State * const L )
+{
+  int i = 0, e = 0 ;
+  struct itimerval it ;
+
+  i = luaL_checkinteger ( L, 1 ) ;
+  i = getitimer ( i, & it ) ;
+  e = errno ;
+  lua_pushinteger ( L, i ) ;
+  lua_pushinteger ( L, e ) ;
+  lua_pushinteger ( L, it . it_interval . tv_sec ) ;
+  lua_pushinteger ( L, it . it_interval . tv_usec ) ;
+  lua_pushinteger ( L, it . it_value . tv_sec ) ;
+  lua_pushinteger ( L, it . it_value . tv_usec ) ;
+
+  return 6 ;
+}
+
+/* wrapper function for setitimer */
+static int u_setitimer ( lua_State * const L )
+{
+  int i = 0, e = 0, r = 0 ;
+  struct itimerval it, it2 ;
+  const int n = lua_gettop ( L ) ;
+
+  if ( 2 > n ) { return 0 ; }
+
+  i = luaL_checkinteger ( L, 1 ) ;
+  r = getitimer ( i, & it ) ;
+  e = errno ;
+  r = luaL_checkinteger ( L, 2 ) ;
+  it . it_value . tv_sec = r ;
+  r = setitimer ( i, & it, & it2 ) ;
+  e = errno ;
+  lua_pushinteger ( L, r ) ;
+  lua_pushinteger ( L, e ) ;
+  lua_pushinteger ( L, it . it_interval . tv_sec ) ;
+  lua_pushinteger ( L, it . it_interval . tv_usec ) ;
+  lua_pushinteger ( L, it . it_value . tv_sec ) ;
+  lua_pushinteger ( L, it . it_value . tv_usec ) ;
+
+  return 6 ;
+}
+
+/* wrapper function for timer_create(2) */
+/*
+static int u_timer_create ( lua_State * const L )
+{
+  return 0 ;
+}
+*/
 
 extern int daylight ;
 extern long int timezone ;

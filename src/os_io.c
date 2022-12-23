@@ -6,36 +6,37 @@
 (void) printf ( "\033[1;32;44m  %s  \n\033[0m", msg ) ;
 */
 
-/* wrapper function for the open syscall */
-static int Sopen ( lua_State * L )
+/* wrapper function for the open(2) syscall */
+static int u_open ( lua_State * const L )
 {
-  const int n = lua_gettop ( L ) ;
+  const char * path = luaL_checkstring ( L, 1 ) ;
 
-  if ( 1 < n ) {
-    const char * path = luaL_checkstring ( L, 1 ) ;
+  if ( path && * path ) {
+    int r = 0 ;
+    int f = luaL_checkinteger ( L, 2 ) ;
+    f = f ? f : O_RDONLY ;
 
-    if ( path && * path ) {
-      int i = luaL_checkinteger ( L, 2 ) ;
-      i = i ? i : O_RDONLY ;
-
-      if ( ( O_CREAT & i ) || ( O_TMPFILE & i ) ) {
-        mode_t m = 00600 ;
-        if ( 2 < n ) { m = luaL_checkinteger ( L, 3 ) ; }
-        m = ( 007777 & m ) ? m : 00600 ;
-        return res_lt ( L, 0, open ( path, i, m ) ) ;
-      } else {
-        return res_lt ( L, 0, open ( path, i ) ) ;
-      }
+    if ( ( O_CREAT & f ) || ( O_TMPFILE & f ) ) {
+      mode_t m = luaL_optinteger ( L, 3, 00600 ) ;
+      m = ( 007777 & m ) ? m : 00600 ;
+      r = open ( path, f, m ) ;
     } else {
-      return luaL_argerror ( L, 1, "empty path" ) ;
+      r = open ( path, f ) ;
     }
+
+    if ( 0 > r ) {
+      return res_nil ( L ) ;
+    }
+
+    lua_pushinteger ( L, r ) ;
+    return 1 ;
   }
 
-  return 0 ;
+  return luaL_argerror ( L, 1, "empty path" ) ;
 }
 
-/* wrapper function for the close syscall */
-static int Screat ( lua_State * L )
+/* wrapper function for the creat(2) syscall */
+static int Screat ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
@@ -51,7 +52,7 @@ static int Screat ( lua_State * L )
 }
 
 /* wrapper function for the dup(2) syscall */
-static int Sdup ( lua_State * L )
+static int Sdup ( lua_State * const L )
 {
   const int i = luaL_checkinteger ( L, 1 ) ;
 
@@ -62,7 +63,7 @@ static int Sdup ( lua_State * L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-static int Lxdup ( lua_State * L )
+static int Lxdup ( lua_State * const L )
 {
   const int fd = luaL_checkinteger ( L, 1 ) ;
 
@@ -78,7 +79,7 @@ static int Lxdup ( lua_State * L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-static int Ldup_fd ( lua_State * L )
+static int Ldup_fd ( lua_State * const L )
 {
   const int i = luaL_checkinteger ( L, 1 ) ;
 
@@ -90,7 +91,7 @@ static int Ldup_fd ( lua_State * L )
 }
 
 /* wrapper function for the dup2(2) syscall */
-static int Sdup2 ( lua_State * L )
+static int Sdup2 ( lua_State * const L )
 {
   const int o = luaL_checkinteger ( L, 1 ) ;
   const int n = luaL_checkinteger ( L, 2 ) ;
@@ -102,7 +103,7 @@ static int Sdup2 ( lua_State * L )
   return luaL_error ( L, "2 vaild fds required" ) ;
 }
 
-static int Lxdup2 ( lua_State * L )
+static int Lxdup2 ( lua_State * const L )
 {
   const int o = luaL_checkinteger ( L, 1 ) ;
   const int n = luaL_checkinteger ( L, 2 ) ;
@@ -119,7 +120,7 @@ static int Lxdup2 ( lua_State * L )
   return luaL_error ( L, "2 vaild fds required" ) ;
 }
 
-static int Ldup_to ( lua_State * L )
+static int Ldup_to ( lua_State * const L )
 {
   const int o = luaL_checkinteger ( L, 1 ) ;
   const int n = luaL_checkinteger ( L, 2 ) ;
@@ -132,7 +133,7 @@ static int Ldup_to ( lua_State * L )
 }
 
 /* wrapper function for the (Linux) dup3 syscall */
-static int Sdup3 ( lua_State * L )
+static int Sdup3 ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   int e = luaL_checkinteger ( L, 2 ) ;
@@ -165,7 +166,7 @@ static int Sdup3 ( lua_State * L )
 }
 
 /* wrapper function for the close(2) syscall */
-static int Sclose ( lua_State * L )
+static int Sclose ( lua_State * const L )
 {
   const int fd = luaL_checkinteger ( L, 1 ) ;
 
@@ -177,7 +178,7 @@ static int Sclose ( lua_State * L )
 }
 
 /* wrapper function for the close(2) syscall */
-static int Lclose_fd ( lua_State * L )
+static int Lclose_fd ( lua_State * const L )
 {
   const int fd = luaL_checkinteger ( L, 1 ) ;
 
@@ -188,7 +189,7 @@ static int Lclose_fd ( lua_State * L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-static int Lclose_all ( lua_State * L )
+static int Lclose_all ( lua_State * const L )
 {
   const int i = luaL_optinteger ( L, 1, -3 ) ;
   close_all ( i ) ;
@@ -196,7 +197,7 @@ static int Lclose_all ( lua_State * L )
 }
 
 /* wrapper function for the lseek syscall */
-static int Slseek ( lua_State * L )
+static int Slseek ( lua_State * const L )
 {
   const int fd = luaL_checkinteger ( L, 1 ) ;
   off_t o = luaL_checkinteger ( L, 2 ) ;
@@ -219,7 +220,7 @@ static int Slseek ( lua_State * L )
 }
 
 /* wrapper function for the write syscall */
-static int Swrite ( lua_State * L )
+static int Swrite ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * str = luaL_checkstring ( L, 2 ) ;
@@ -246,7 +247,7 @@ static int Swrite ( lua_State * L )
 #define BUF_LEN		801
 
 /* wrapper function for the read syscall */
-static int Sread ( lua_State * L )
+static int Sread ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   size_t s = (lua_Unsigned) luaL_checkinteger ( L, 2 ) ;
@@ -294,7 +295,7 @@ static int Sread ( lua_State * L )
   return 0 ;
 }
 
-static int Lbuf_read ( lua_State * L )
+static int Lbuf_read ( lua_State * const L )
 {
   const int fd = luaL_checkinteger ( L, 1 ) ;
 
@@ -324,7 +325,7 @@ static int Lbuf_read ( lua_State * L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-static int Lbuf_read_close ( lua_State * L )
+static int Lbuf_read_close ( lua_State * const L )
 {
   const int fd = luaL_checkinteger ( L, 1 ) ;
 
@@ -357,7 +358,7 @@ static int Lbuf_read_close ( lua_State * L )
 }
 
 /* wrapper function for the pipe syscall */
-static int Spipe ( lua_State * L )
+static int Spipe ( lua_State * const L )
 {
   int p [ 2 ] = { -1 } ;
 
@@ -374,7 +375,7 @@ static int Spipe ( lua_State * L )
 }
 
 /* another wrapper for the pipe syscall */
-static int Lpipe ( lua_State * L )
+static int Lpipe ( lua_State * const L )
 {
   int p [ 2 ] ;
 
@@ -418,7 +419,7 @@ static int Ssocketpair ( lua_State * L )
 }
 */
 
-static int Lstream_pipe ( lua_State * L )
+static int Lstream_pipe ( lua_State * const L )
 {
   int i = 0, p [ 2 ] ;
 
@@ -449,7 +450,7 @@ static int Lstream_pipe ( lua_State * L )
 
 #if 0
 /* wrapper function for the fcntl syscall */
-static int Sfcntl ( lua_State * L )
+static int Sfcntl ( lua_State * const L )
 {
   int e = 0, r = 0 ;
   int fd = luaL_checkinteger ( L, 1 ) ;
@@ -459,7 +460,7 @@ static int Sfcntl ( lua_State * L )
 }
 
 /* wrapper function for the ioctl syscall */
-static int Sioctl ( lua_State * L )
+static int Sioctl ( lua_State * const L )
 {
   int fd = luaL_checkinteger ( L, 1 ) ;
   unsigned int cmd = (lua_Unsigned) luaL_checkinteger ( L, 2 ) ;
@@ -469,7 +470,7 @@ static int Sioctl ( lua_State * L )
 #endif
 
 /* checks if a given file descriptor has data pending */
-static int Lfd_has_data ( lua_State * L )
+static int Lfd_has_data ( lua_State * const L )
 {
   int fd = luaL_checkinteger ( L, 1 ) ;
 
@@ -483,7 +484,7 @@ static int Lfd_has_data ( lua_State * L )
 }
 
 /* check if a number of given fds is ready for reading using select(2) */
-static int Lfds_have_data ( lua_State * L )
+static int Lfds_have_data ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -530,7 +531,7 @@ static int Lfds_have_data ( lua_State * L )
 /* wait for some time until a number of given fds become
  * ready for reading using select(2)
  */
-static int Lwait_for_fd_data ( lua_State * L )
+static int Lwait_for_fd_data ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -576,7 +577,7 @@ static int Lwait_for_fd_data ( lua_State * L )
   return 0 ;
 }
 
-static int Lfd_has_input ( lua_State * L )
+static int Lfd_has_input ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -611,7 +612,7 @@ static int Lfd_has_input ( lua_State * L )
   return 0 ;
 }
 
-static int Lpoll_input_fd ( lua_State * L )
+static int Lpoll_input_fd ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
 
@@ -642,7 +643,7 @@ static int Lpoll_input_fd ( lua_State * L )
   return 0 ;
 }
 
-static int Lredirio ( lua_State * L )
+static int Lredirio ( lua_State * const L )
 {
   int i = 0 ;
   const char * path = luaL_checkstring ( L, 1 ) ;
@@ -654,7 +655,7 @@ static int Lredirio ( lua_State * L )
 }
 
 /* wrapper function for the isatty syscall */
-static int Sisatty ( lua_State * L )
+static int Sisatty ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -691,7 +692,7 @@ static int Sisatty ( lua_State * L )
 }
 
 /* wrapper function for the ttyname syscall */
-static int Sttyname ( lua_State * L )
+static int Sttyname ( lua_State * const L )
 {
   int e = 0, i = luaL_checkinteger ( L, 1 ) ;
 
@@ -711,7 +712,7 @@ static int Sttyname ( lua_State * L )
 }
 
 /* get the name of the controlling tty of the calling process */
-static int Sctermid ( lua_State * L )
+static int Sctermid ( lua_State * const L )
 {
   char cterm [ 1 + L_ctermid ] = { 0 } ;
 
@@ -722,7 +723,7 @@ static int Sctermid ( lua_State * L )
 }
 
 /* set the controlling tty of the calling process */
-static int Sctty ( lua_State * L )
+static int Sctty ( lua_State * const L )
 {
   int e = 0, r = 0, fd = -1, steal = 0 ;
   const char * path = NULL ;
@@ -767,14 +768,14 @@ static int Sctty ( lua_State * L )
  */
 
 /* fflush(3) ALL open output (FILE) streams */
-static int Lflushallout ( lua_State * L )
+static int Lflushallout ( lua_State * const L )
 {
   (void) fflush ( NULL ) ;
   return 0 ;
 }
 
 /* just calls puts(3) */
-static int Sputs ( lua_State * L )
+static int Sputs ( lua_State * const L )
 {
   const char * msg = luaL_checkstring ( L, 1 ) ;
 
@@ -783,7 +784,7 @@ static int Sputs ( lua_State * L )
 }
 
 /* get the fd corresponding to a Lua file "object" */
-static int Lfileno ( lua_State * L )
+static int Lfileno ( lua_State * const L )
 {
   /* FILE * fp = * (FILE **) luaL_checkudata ( L, 1, LUA_FILEHANDLE ) ; */
   luaL_Stream * p = (luaL_Stream *) luaL_checkudata ( L, 1, LUA_FILEHANDLE ) ;
@@ -808,7 +809,7 @@ static int Lfileno ( lua_State * L )
 /* helper function that closes a Lua file "object".
  * this function is adapted from Lua 5.3's liolib.c
  */
-static int Lstdio_fclose ( lua_State * L )
+static int Lstdio_fclose ( lua_State * const L )
 {
   luaL_Stream * p = (luaL_Stream *) luaL_checkudata ( L, 1, LUA_FILEHANDLE ) ;
 
@@ -830,7 +831,7 @@ static int Lstdio_fclose ( lua_State * L )
 }
 
 /* create a Lua file "object" from a given file descriptor */
-static int Lfdopen ( lua_State * L )
+static int Lfdopen ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * mode = luaL_checkstring ( L, 2 ) ;
@@ -860,7 +861,7 @@ static int Lfdopen ( lua_State * L )
 }
 
 #if defined (OSLinux)
-static int Smemfd_create ( lua_State * L )
+static int Smemfd_create ( lua_State * const L )
 {
 #  if defined (SYS_memfd_create)
   const char * path = luaL_checkstring ( L, 1 ) ;
@@ -885,7 +886,7 @@ static int Smemfd_create ( lua_State * L )
 }
 #endif
 
-static int Lreset_term ( lua_State * L )
+static int Lreset_term ( lua_State * const L )
 {
   const int fd = luaL_optinteger ( L, 1, 0 ) ;
 
@@ -907,7 +908,7 @@ static int Lreset_term ( lua_State * L )
 }
 
 /* change the active virtual terminal */
-static int l_chvt ( lua_State * L )
+static int l_chvt ( lua_State * const L )
 {
 #if defined (OSLinux)
   int e = 0, i = luaL_optinteger ( L, 1, 1 ) ;

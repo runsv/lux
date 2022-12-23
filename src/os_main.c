@@ -287,6 +287,7 @@ static int arg_is_fd ( lua_State * const L, const int index )
 #include "os_time.c"
 #include "os_svipc.c"
 #include "os_file.c"
+#include "os_at.c"
 #include "os_io.c"
 #include "os_env.c"
 #include "os_match.c"
@@ -894,6 +895,16 @@ static void add_const ( lua_State * const L )
   L_ADD_CONST( L, PATH_MAX )
   L_ADD_CONST( L, CLOCKS_PER_SEC )
   L_ADD_CONST( L, FD_SETSIZE )
+
+  /* constants used by the *at() syscalls */
+#if defined (AT_FDCWD)
+  L_ADD_CONST( L, AT_FDCWD )
+  L_ADD_CONST( L, AT_EACCESS )
+  L_ADD_CONST( L, AT_EMPTY_PATH )
+  L_ADD_CONST( L, AT_REMOVEDIR )
+  L_ADD_CONST( L, AT_SYMLINK_FOLLOW )
+  L_ADD_CONST( L, AT_SYMLINK_NOFOLLOW )
+#endif
 
   /* constants used by wait(p)id */
   L_ADD_CONST( L, WNOHANG )
@@ -1510,8 +1521,6 @@ static const luaL_Reg sys_func [ ] =
   { "sleep",			Ssleep		},
   { "usleep",			Susleep		},
   { "nanosleep",		Snanosleep	},
-  { "alarm",			Salarm		},
-  { "ualarm",			Sualarm		},
   { "wait",			Swait		},
   { "waitpid",			Swaitpid	},
   { "waitid",			Swaitid		},
@@ -1520,8 +1529,6 @@ static const luaL_Reg sys_func [ ] =
   { "waitid_exited_nohang",	Lwaitid_exited_nohang	},
   { "set_subreaper",		Lset_subreaper	},
   { "is_subreaper",		Lis_subreaper	},
-  { "getitimer",		Sgetitimer	},
-  { "setitimer",		Ssetitimer	},
   { "exit",			Sexit		},
   { "abort",			Sabort		},
   { "_exit",			S_exit		},
@@ -1563,6 +1570,10 @@ static const luaL_Reg sys_func [ ] =
   /* end of imported functions from "os_proc.c" */
 
   /* functions imported from "os_time.c" : */
+  { "alarm",			u_alarm		},
+  { "ualarm",			u_ualarm	},
+  { "getitimer",		u_getitimer	},
+  { "setitimer",		u_setitimer	},
   { "tzset",			Stzset		},
   { "tzget",			Ltzget		},
   { "time",			Stime		},
@@ -1728,7 +1739,7 @@ static const luaL_Reg sys_func [ ] =
   /* end of imported functions from "os_file.c" */
 
   /* functions imported from "os_io.c" : */
-  { "open",			Sopen	},
+  { "open",			u_open	},
   { "creat",			Screat	},
   { "dup",			Sdup	},
   { "xdup",			Lxdup		},
@@ -1774,7 +1785,19 @@ static const luaL_Reg sys_func [ ] =
 #endif
   /* end of imported functions from "os_io.c" */
 
-  /* functions imported from "os_pw.c" : */
+#if defined (AT_FDCWD)
+  /* functions imported from "os_at.c": */
+  { "openat",			u_openat	},
+  { "mkdirat",			u_mkdirat	},
+  { "mkfifoat",			u_mkfifoat	},
+  { "unlinkat",			u_unlinkat	},
+  { "renameat",			u_renameat	},
+  { "linkat",			u_linkat	},
+  { "symlinkat",		u_symlinkat	},
+  /* end of imported functions from "os_at.c" */
+#endif
+
+  /* functions imported from "os_pw.c": */
   { "getpwuid",			Sgetpwuid	},
   { "getpwnam",			Sgetpwnam	},
   { "getgrgid",			Sgetgrgid	},
@@ -1791,14 +1814,14 @@ static const luaL_Reg sys_func [ ] =
   { "fnmatch",			Sfnmatch	},
   /* end of imported functions from "os_match.c" */
 
-  /* functions imported from "os_regex.c" : */
+  /* functions imported from "os_regex.c": */
   { "simple_regmatch",		simple_regmatch	},
   { "sregmatch",		simple_regmatch	},
   { "grep",			l_grep		},
   { "ncgrep",			l_ncgrep	},
   /* end of imported functions from "os_regex.c" */
 
-  /* functions imported from "os_fs.c" : */
+  /* functions imported from "os_fs.c": */
   { "statvfs",			Sstatvfs	},
   { "fstatvfs",			Sfstatvfs	},
   { "statfs",			Sstatfs		},
