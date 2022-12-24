@@ -136,4 +136,19 @@ static int u_symlinkat ( lua_State * const L )
   return luaL_error ( L, "target and linkpath required" ) ;
 }
 
+/* wrapper function for the fchmodat(2) syscall */
+static int u_fchmodat ( lua_State * const L )
+{
+  const int dirfd = luaL_checkinteger ( L, 1 ) ;
+  const char * path = luaL_checkstring ( L, 2 ) ;
+
+  if ( path && * path ) {
+    mode_t m = luaL_checkinteger ( L, 3 ) ;
+    return res_bool_zero ( L, fchmodat ( dirfd, path, m,
+      luaL_optinteger ( L, 4, 0 ) ) ) ;
+  }
+
+  return luaL_argerror ( L, 2, "filename required" ) ;
+}
+
 #endif

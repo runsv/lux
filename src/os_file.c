@@ -160,27 +160,29 @@ static int Lclobber ( lua_State * const L )
 /* wrapper to mkdir(2) */
 static int u_mkdir ( lua_State * const L )
 {
-  const mode_t m = 00700 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
-  const char * path = luaL_checkstring ( L, 2 ) ;
+  const char * path = luaL_checkstring ( L, 1 ) ;
+  mode_t m = 007777 & (lua_Unsigned) luaL_optinteger ( L, 2, 00700 ) ;
+  m |= 00700 ;
 
   if ( path && * path ) {
     return res_bool_zero ( L, mkdir ( path, m ) ) ;
   }
 
-  return luaL_argerror ( L, 2, "invalid dir path" ) ;
+  return luaL_argerror ( L, 1, "invalid dir path" ) ;
 }
 
 /* wrapper to mkfifo(3) */
 static int u_mkfifo ( lua_State * const L )
 {
-  const mode_t m = 00600 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
-  const char * path = luaL_checkstring ( L, 2 ) ;
+  const char * path = luaL_checkstring ( L, 1 ) ;
+  mode_t m = 007777 & (lua_Unsigned) luaL_optinteger ( L, 2, 00600 ) ;
+  m |= 00600 ;
 
   if ( path && * path ) {
     return res_bool_zero ( L, mkfifo ( path, m ) ) ;
   }
 
-  return luaL_argerror ( L, 2, "invalid filename" ) ;
+  return luaL_argerror ( L, 1, "invalid filename" ) ;
 }
 
 static int l_mkpath ( lua_State * const L )

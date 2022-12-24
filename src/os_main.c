@@ -1794,6 +1794,7 @@ static const luaL_Reg sys_func [ ] =
   { "renameat",			u_renameat	},
   { "linkat",			u_linkat	},
   { "symlinkat",		u_symlinkat	},
+  { "fchmodat",			u_fchmodat	},
   /* end of imported functions from "os_at.c" */
 #endif
 
