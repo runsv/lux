@@ -47,6 +47,21 @@ static int u_openat ( lua_State * const L )
   return luaL_argerror ( L, 2, "invalid filename" ) ;
 }
 
+/* wrapper function for the faccessat(2) syscall */
+static int u_faccessat ( lua_State * const L )
+{
+  const int dirfd = luaL_checkinteger ( L, 1 ) ;
+  const char * path = luaL_checkstring ( L, 2 ) ;
+
+  if ( path && * path ) {
+    const int what = luaL_checkinteger ( L, 3 ) ;
+    return res_bool_zero ( L, faccessat ( dirfd, path,
+      what, luaL_optinteger ( L, 4, 0 ) ) ) ;
+  }
+
+  return luaL_argerror ( L, 2, "invalid filename" ) ;
+}
+
 /* wrapper function for the mkdirat(2) syscall */
 static int u_mkdirat ( lua_State * const L )
 {
@@ -146,6 +161,22 @@ static int u_fchmodat ( lua_State * const L )
     mode_t m = luaL_checkinteger ( L, 3 ) ;
     return res_bool_zero ( L, fchmodat ( dirfd, path, m,
       luaL_optinteger ( L, 4, 0 ) ) ) ;
+  }
+
+  return luaL_argerror ( L, 2, "filename required" ) ;
+}
+
+/* wrapper function for the fchownat(2) syscall */
+static int u_fchownat ( lua_State * const L )
+{
+  const int dirfd = luaL_checkinteger ( L, 1 ) ;
+  const char * path = luaL_checkstring ( L, 2 ) ;
+
+  if ( path && * path ) {
+    const uid_t owner = luaL_checkinteger ( L, 3 ) ;
+    const gid_t group = luaL_checkinteger ( L, 4 ) ;
+    return res_bool_zero ( L, fchownat ( dirfd, path,
+      owner, group, luaL_optinteger ( L, 5, 0 ) ) ) ;
   }
 
   return luaL_argerror ( L, 2, "filename required" ) ;

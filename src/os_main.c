@@ -1788,6 +1788,7 @@ static const luaL_Reg sys_func [ ] =
 #if defined (AT_FDCWD)
   /* functions imported from "os_at.c": */
   { "openat",			u_openat	},
+  { "faccessat",		u_faccessat	},
   { "mkdirat",			u_mkdirat	},
   { "mkfifoat",			u_mkfifoat	},
   { "unlinkat",			u_unlinkat	},
@@ -1795,6 +1796,7 @@ static const luaL_Reg sys_func [ ] =
   { "linkat",			u_linkat	},
   { "symlinkat",		u_symlinkat	},
   { "fchmodat",			u_fchmodat	},
+  { "fchownat",			u_fchownat	},
   /* end of imported functions from "os_at.c" */
 #endif
 
