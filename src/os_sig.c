@@ -326,6 +326,7 @@ static int Ltrap_sig ( lua_State * L ) {
 }
 
 /* get a new signal fd (Linux only) */
+/*
 #if defined (OSLinux)
 static int Lsignalfd ( lua_State * L )
 {
@@ -333,10 +334,7 @@ static int Lsignalfd ( lua_State * L )
   int i = signalfd ( -1, & ss, SFD_NONBLOCK | SFD_CLOEXEC ) ;
 
   if ( 0 > i ) {
-    i = errno ;
-    lua_pushinteger ( L, -1 ) ;
-    lua_pushinteger ( L, i ) ;
-    return 2 ;
+    return res_nil ( L ) ;
   } else {
     lua_pushinteger ( L, i ) ;
     return 1 ;
@@ -346,7 +344,6 @@ static int Lsignalfd ( lua_State * L )
 }
 #endif
 
-/*
 static lua_State * SL = NULL ;
 
 static int sig_init ( lua_State * L )

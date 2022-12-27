@@ -1650,10 +1650,12 @@ static const luaL_Reg sys_func [ ] =
   { "killall5",			Lkillall5 },
   { "kill_all",			Lkill_all },
   { "nuke",			Lnuke		},
-  { "got_sig",			Lgot_sig		},
-  { "trap_sig",			Ltrap_sig		},
+  { "got_sig",			Lgot_sig	},
+  { "trap_sig",			Ltrap_sig	},
 #if defined (OSLinux)
-  { "signalfd",			Lsignalfd		},
+  /*
+  { "signalfd",			Lsignalfd	},
+  */
 #endif
   /* end of imported functions from "os_sig.c" */
 
