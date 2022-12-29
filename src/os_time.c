@@ -3,6 +3,69 @@
  * ADD: clock_gettime, timer_settimer etc
  */
 
+/* wrapper function for the utime(2) syscall */
+static int u_utime ( lua_State * const L )
+{
+  const char * path = luaL_checkstring ( L, 1 ) ;
+
+  if ( path && * path ) {
+    const int n = lua_gettop ( L ) ;
+
+    if ( 1 < n ) {
+      struct utimbuf times ;
+      times . modtime = luaL_checkinteger ( L, 2 ) ;
+
+      if ( 2 < n ) {
+        times . actime = luaL_checkinteger ( L, 3 ) ;
+      } else {
+        times . actime = time ( NULL ) ;
+      }
+
+      return res_bool_zero ( L, utime ( path, & times ) ) ;
+    } else {
+      return res_bool_zero ( L, utime ( path, NULL ) ) ;
+    }
+  }
+
+  return luaL_argerror ( L, 1, "filename required" ) ;
+}
+
+static int do_utimes ( lua_State * const L, const char s )
+{
+  const char * path = luaL_checkstring ( L, 1 ) ;
+
+  if ( path && * path ) {
+    const int n = lua_gettop ( L ) ;
+
+    if ( 4 < n ) {
+      struct timeval times [ 2 ] ;
+      times [ 0 ] . tv_sec = luaL_checkinteger ( L, 2 ) ;
+      times [ 0 ] . tv_usec = luaL_checkinteger ( L, 3 ) ;
+      times [ 1 ] . tv_sec = luaL_checkinteger ( L, 4 ) ;
+      times [ 1 ] . tv_usec = luaL_checkinteger ( L, 5 ) ;
+      return res_bool_zero ( L,
+        s ? lutimes ( path, times ) : utimes ( path, times ) ) ;
+    } else {
+      return res_bool_zero ( L,
+        s ? lutimes ( path, NULL ) : utimes ( path, NULL ) ) ;
+    }
+  }
+
+  return luaL_argerror ( L, 1, "filename required" ) ;
+}
+
+/* wrapper function for the utimes(2) syscall */
+static int u_utimes ( lua_State * const L )
+{
+  return do_utimes ( L, 0 ) ;
+}
+
+/* wrapper function for the lutimes(2) syscall */
+static int u_lutimes ( lua_State * const L )
+{
+  return do_utimes ( L, 1 ) ;
+}
+
 /* wrapper function for the alarm(2) syscall */
 static int u_alarm ( lua_State * const L )
 {

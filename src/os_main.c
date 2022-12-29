@@ -1540,6 +1540,9 @@ static const luaL_Reg sys_func [ ] =
   /* end of imported functions from "os_proc.c" */
 
   /* functions imported from "os_time.c" : */
+  { "utime",			u_utime		},
+  { "utimes",			u_utimes	},
+  { "lutimes",			u_lutimes	},
   { "alarm",			u_alarm		},
   { "ualarm",			u_ualarm	},
   { "getitimer",		u_getitimer	},
