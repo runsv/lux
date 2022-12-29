@@ -70,6 +70,7 @@ static int u_socket ( lua_State * const L )
   return 1 ;
 }
 
+/*
 static int u_bind ( lua_State * const L )
 {
   return 1 ;
@@ -97,6 +98,7 @@ static int u_accept ( lua_State * const L )
 {
   return 1 ;
 }
+*/
 
 #if 0
 /* sets up the (Linux: abstract) unix domain socket the server

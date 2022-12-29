@@ -1053,7 +1053,7 @@ static void add_const ( lua_State * const L )
   L_ADD_CONST( L, IN_Q_OVERFLOW )
   L_ADD_CONST( L, IN_UNMOUNT )
 
-  /* constants for fanotify (Linux only !) */
+  /* constants for fanotify (Linux only!) */
   L_ADD_CONST( L, FAN_CLASS_PRE_CONTENT )
   L_ADD_CONST( L, FAN_CLASS_CONTENT )
   L_ADD_CONST( L, FAN_CLASS_NOTIF )
@@ -1063,44 +1063,14 @@ static void add_const ( lua_State * const L )
   L_ADD_CONST( L, FAN_UNLIMITED_MARKS )
 #endif
 
-  /* constants used by glob */
-  L_ADD_CONST( L, GLOB_ERR )
-  L_ADD_CONST( L, GLOB_MARK )
-  L_ADD_CONST( L, GLOB_NOESCAPE )
-  L_ADD_CONST( L, GLOB_NOSORT )
-  L_ADD_CONST( L, GLOB_DOOFFS )
-  L_ADD_CONST( L, GLOB_NOCHECK )
-  L_ADD_CONST( L, GLOB_APPEND )
-#if defined(OSLinux) && defined(__GLIBC__)
-  L_ADD_CONST( L, GLOB_PERIOD )
-  L_ADD_CONST( L, GLOB_ALTDIRFUNC )
-  L_ADD_CONST( L, GLOB_BRACE )
-  L_ADD_CONST( L, GLOB_NOMAGIC )
-  L_ADD_CONST( L, GLOB_TILDE )
-  L_ADD_CONST( L, GLOB_TILDE_CHECK )
-  L_ADD_CONST( L, GLOB_ONLYDIR )
-#endif
-  L_ADD_CONST( L, GLOB_ABORTED )
-  L_ADD_CONST( L, GLOB_NOMATCH )
-  L_ADD_CONST( L, GLOB_NOSPACE )
+  /* constants used by fnmatch(3) */
+  add_fnmatch_flags ( L ) ;
 
-  /* constants used by fnmatch */
-  L_ADD_CONST( L, FNM_NOESCAPE )
-  L_ADD_CONST( L, FNM_PATHNAME )
-  L_ADD_CONST( L, FNM_PERIOD )
+  /* constants used by glob(3) */
+  add_glob_flags ( L ) ;
 
   /* constants for wordexp(3) */
-  L_ADD_CONST( L, WRDE_APPEND )
-  L_ADD_CONST( L, WRDE_DOOFFS )
-  L_ADD_CONST( L, WRDE_NOCMD )
-  L_ADD_CONST( L, WRDE_REUSE )
-  L_ADD_CONST( L, WRDE_SHOWERR )
-  L_ADD_CONST( L, WRDE_UNDEF )
-  L_ADD_CONST( L, WRDE_BADCHAR )
-  L_ADD_CONST( L, WRDE_BADVAL )
-  L_ADD_CONST( L, WRDE_CMDSUB )
-  L_ADD_CONST( L, WRDE_NOSPACE )
-  L_ADD_CONST( L, WRDE_SYNTAX )
+  add_wordexp_flags ( L ) ;
 
   /* constants for the POSIX regex API */
   L_ADD_CONST( L, REG_EXTENDED )
@@ -1814,9 +1784,9 @@ static const luaL_Reg sys_func [ ] =
   /* end of imported functions from "os_pw.c" */
 
   /* functions imported from "os_match.c" : */
-  { "glob",			Sglob		},
-  { "wordexp",			Swordexp	},
-  { "fnmatch",			Sfnmatch	},
+  { "glob",			u_glob		},
+  { "wordexp",			u_wordexp	},
+  { "fnmatch",			u_fnmatch	},
   /* end of imported functions from "os_match.c" */
 
   /* functions imported from "os_regex.c": */
