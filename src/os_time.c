@@ -66,6 +66,56 @@ static int u_lutimes ( lua_State * const L )
   return do_utimes ( L, 1 ) ;
 }
 
+/* wrapper function for the futimes(2) syscall */
+static int u_futimes ( lua_State * const L )
+{
+  const int n = lua_gettop ( L ) ;
+  const int fd = luaL_checkinteger ( L, 1 ) ;
+
+  if ( 0 <= fd ) {
+    if ( 4 < n ) {
+      struct timeval times [ 2 ] ;
+      times [ 0 ] . tv_sec = luaL_checkinteger ( L, 2 ) ;
+      times [ 0 ] . tv_usec = luaL_checkinteger ( L, 3 ) ;
+      times [ 1 ] . tv_sec = luaL_checkinteger ( L, 4 ) ;
+      times [ 1 ] . tv_usec = luaL_checkinteger ( L, 5 ) ;
+      return res_bool_zero ( L, futimes ( fd, times ) ) ;
+    } else {
+      return res_bool_zero ( L, futimes ( fd, NULL ) ) ;
+    }
+  }
+
+  return luaL_argerror ( L, 1, "valid file descriptor required" ) ;
+}
+
+static void add_futimens_flags ( lua_State * const L )
+{
+  L_ADD_CONST( L, UTIME_NOW )
+  L_ADD_CONST( L, UTIME_OMIT )
+}
+
+/* wrapper function for the futimens(2) syscall */
+static int u_futimens ( lua_State * const L )
+{
+  const int n = lua_gettop ( L ) ;
+  const int fd = luaL_checkinteger ( L, 1 ) ;
+
+  if ( 0 <= fd ) {
+    if ( 4 < n ) {
+      struct timespec times [ 2 ] ;
+      times [ 0 ] . tv_sec = luaL_checkinteger ( L, 2 ) ;
+      times [ 0 ] . tv_nsec = luaL_checkinteger ( L, 3 ) ;
+      times [ 1 ] . tv_sec = luaL_checkinteger ( L, 4 ) ;
+      times [ 1 ] . tv_nsec = luaL_checkinteger ( L, 5 ) ;
+      return res_bool_zero ( L, futimens ( fd, times ) ) ;
+    } else {
+      return res_bool_zero ( L, futimens ( fd, NULL ) ) ;
+    }
+  }
+
+  return luaL_argerror ( L, 1, "valid file descriptor required" ) ;
+}
+
 /* wrapper function for the alarm(2) syscall */
 static int u_alarm ( lua_State * const L )
 {

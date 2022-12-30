@@ -1128,6 +1128,9 @@ static void add_const ( lua_State * const L )
   L_ADD_CONST( L, S_IXGRP )
   L_ADD_CONST( L, S_IXOTH )
 
+  /* constants for futimens(2) */
+  add_futimens_flags ( L ) ;
+
   /* constants for interval timers */
   L_ADD_CONST( L, ITIMER_REAL )
   L_ADD_CONST( L, ITIMER_VIRTUAL )
@@ -1543,6 +1546,8 @@ static const luaL_Reg sys_func [ ] =
   { "utime",			u_utime		},
   { "utimes",			u_utimes	},
   { "lutimes",			u_lutimes	},
+  { "futimes",			u_futimes	},
+  { "futimens",			u_futimens	},
   { "alarm",			u_alarm		},
   { "ualarm",			u_ualarm	},
   { "getitimer",		u_getitimer	},
@@ -1670,12 +1675,8 @@ static const luaL_Reg sys_func [ ] =
   { "symlink",			Ssymlink	},
   { "mkfifo",			u_mkfifo	},
   { "mknod",			u_mknod		},
-  { "touch",			Ltouch		},
-  { "octouch",			Loctouch	},
+  { "touch",			l_touch		},
   { "create",			Lcreate		},
-  { "empty_file",		Lempty_file	},
-  { "touch_file",		Ltouch_file	},
-  { "empty_files",		Lempty_files	},
   { "stat",			Sstat		},
   { "lstat",			Slstat		},
   { "fstat",			Sfstat		},
@@ -1772,6 +1773,7 @@ static const luaL_Reg sys_func [ ] =
   { "symlinkat",		u_symlinkat	},
   { "fchmodat",			u_fchmodat	},
   { "fchownat",			u_fchownat	},
+  { "utimensat",		u_utimensat	},
   /* end of imported functions from "os_at.c" */
 #endif
 

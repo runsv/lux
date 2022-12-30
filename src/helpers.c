@@ -673,24 +673,26 @@ static int fd_has_data ( const int fd )
   return 1 == select ( 1 + fd, & fds, NULL, NULL, & tv ) ;
 }
 
-static void octouch ( const char * const path )
-{
-  if ( path && * path ) {
-    int i = open ( path, O_CREAT | O_RDWR, 00644 ) ;
-    if ( 0 <= i ) { close_fd ( i ) ; }
-  }
-}
-
 static int touch ( const char * const path )
 {
   if ( path && * path ) {
-    if ( mknod ( path, S_IFREG | 00644, 0 ) && EEXIST != errno )
-    { return -1 ; }
+    if ( access ( path, F_OK ) ) {
+      const int fd = open ( path,
+        O_CREAT | O_RDWR | O_TRUNC | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY, 00644 ) ;
+      if ( 0 <= fd ) { (void) close_fd ( fd ) ; }
+      else { return -3 ; }
+      /*
+      if ( mknod ( path, S_IFREG | 00644, 0 ) && EEXIST != errno )
+      { return -5 ; }
+      */
+    } else if ( lutimes ( path, NULL ) ) {
+      return -2 ;
+    }
 
     return 0 ;
   }
 
-  return -3 ;
+  return -1 ;
 }
 
 static int create ( const char * const path, mode_t mode,

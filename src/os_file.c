@@ -126,37 +126,6 @@ static int Srealpath ( lua_State * const L )
   return luaL_error ( L, "path required" ) ;
 }
 
-static int Lclobber ( lua_State * const L )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 0 < n ) {
-    int i, j ;
-    const char * path = NULL ;
-
-    for ( i = 1 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        j = open ( path,
-          O_WRONLY | O_TRUNC | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 00644 ) ;
-
-        if ( 0 > j ) {
-          j = errno ;
-          return luaL_error ( L, "open( %s ) failed: %s (errno %d)",
-            path, strerror ( j ), j ) ;
-        } else {
-          (void) close_fd ( j ) ;
-        }
-      } else {
-        return luaL_argerror ( L, i, "invalid file name" ) ;
-      }
-    }
-  }
-
-  return luaL_error ( L, "path required" ) ;
-}
-
 /* wrapper to mkdir(2) */
 static int u_mkdir ( lua_State * const L )
 {
@@ -466,29 +435,16 @@ static int Sftruncate ( lua_State * const L )
 }
 
 /* touch(1) like function that uses mknod(2) */
-static int Ltouch ( lua_State * const L )
+static int l_touch ( lua_State * const L )
 {
-  int i = -3 ;
+  int e = 0, i = -3 ;
   const char * path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {
-    i = touch ( path ) ;
+    res_bool_zero ( L, touch ( path ) ) ;
   }
 
-  lua_pushboolean ( L, 0 == i ) ;
-  return 1 ;
-}
-
-/* touch(1) like function that uses open() and close() */
-static int Loctouch ( lua_State * const L )
-{
-  const char * path = luaL_checkstring ( L, 1 ) ;
-
-  if ( path && * path ) {
-    octouch ( path ) ;
-  }
-
-  return 0 ;
+  return luaL_argerror ( L, 1, "filename required" ) ;
 }
 
 /* make sure a given file exists and has the right permissions */
@@ -512,82 +468,6 @@ static int Lcreate ( lua_State * const L )
     i = create ( path, mode, uid, gid ) ;
     lua_pushinteger ( L, i ) ;
     return 1 ;
-  }
-
-  return 0 ;
-}
-
-static int Lempty_file ( lua_State * const L )
-{
-  const char * path = luaL_checkstring ( L, 1 ) ;
-
-  if ( path && * path ) {
-    int i = luaL_optinteger ( L, 2, 00622 ) ;
-
-    i = ( 00777 & i ) ? i : 00622 ;
-    i = open ( path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOCTTY, i ) ;
-
-    if ( 0 > i ) {
-      i = errno ;
-      lua_pushboolean ( L, 0 ) ;
-      lua_pushinteger ( L, i ) ;
-      return 2 ;
-    } else {
-      (void) close_fd ( i ) ;
-      lua_pushboolean ( L, 1 ) ;
-      return 1 ;
-    }
-  }
-
-  return 0 ;
-}
-
-static int Ltouch_file ( lua_State * const L )
-{
-  const char * path = luaL_checkstring ( L, 1 ) ;
-
-  if ( path && * path ) {
-    int i = luaL_optinteger ( L, 2, 00622 ) ;
-
-    i = ( 00777 & i ) ? i : 00622 ;
-    i = open ( path, O_WRONLY | O_CREAT | O_CLOEXEC | O_NOCTTY, i ) ;
-
-    if ( 0 > i ) {
-      i = errno ;
-      lua_pushboolean ( L, 0 ) ;
-      lua_pushinteger ( L, i ) ;
-      return 2 ;
-    } else {
-      (void) close_fd ( i ) ;
-      lua_pushboolean ( L, 1 ) ;
-      return 1 ;
-    }
-  }
-
-  return 0 ;
-}
-
-static int Lempty_files ( lua_State * const L )
-{
-  const int n = lua_gettop ( L ) ;
-
-  if ( 1 < n ) {
-    int f, i, r = 0 ;
-    const char * path = NULL ;
-    mode_t m = (lua_Unsigned) luaL_checkinteger ( L, 1 ) ;
-    m = ( 00777 & m ) ? m : 00622 ;
-
-    for ( i = 2 ; n >= i ; ++ i ) {
-      path = luaL_checkstring ( L, i ) ;
-
-      if ( path && * path ) {
-        f = open ( path, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC | O_NOCTTY, i ) ;
-        if ( 0 > f ) { ++ r ; }
-        else { (void) close_fd ( f ) ; }
-      }
-    }
-
-    return res_zero ( L, r ) ;
   }
 
   return 0 ;

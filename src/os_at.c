@@ -182,4 +182,37 @@ static int u_fchownat ( lua_State * const L )
   return luaL_argerror ( L, 2, "filename required" ) ;
 }
 
+/* wrapper function for the utimensat(2) syscall */
+static int u_utimensat ( lua_State * const L )
+{
+  const int n = lua_gettop ( L ) ;
+  const int dirfd = luaL_checkinteger ( L, 1 ) ;
+  const char * path = luaL_checkstring ( L, 2 ) ;
+
+  if ( path && * path ) {
+    int f = 0 ;
+
+    if ( 5 < n ) {
+      struct timespec times [ 2 ] ;
+      times [ 0 ] . tv_sec = luaL_checkinteger ( L, 3 ) ;
+      times [ 0 ] . tv_nsec = luaL_checkinteger ( L, 4 ) ;
+      times [ 1 ] . tv_sec = luaL_checkinteger ( L, 5 ) ;
+      times [ 1 ] . tv_nsec = luaL_checkinteger ( L, 6 ) ;
+
+      if ( 6 < n ) {
+        f = luaL_checkinteger ( L, 7 ) ;
+      }
+
+      return res_bool_zero ( L, utimensat ( dirfd, path, times, f ) ) ;
+    } else if ( 2 < n ) {
+      f = luaL_checkinteger ( L, 3 ) ;
+      return res_bool_zero ( L, utimensat ( dirfd, path, NULL, f ) ) ;
+    } else {
+      return res_bool_zero ( L, utimensat ( dirfd, path, NULL, 0 ) ) ;
+    }
+  }
+
+  return luaL_argerror ( L, 1, "filename required" ) ;
+}
+
 #endif
