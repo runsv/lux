@@ -157,21 +157,15 @@ static int u_mkfifo ( lua_State * const L )
 static int l_mkpath ( lua_State * const L )
 {
   size_t s = 0 ;
-  const mode_t m = 00700 | ( 007777 & (lua_Unsigned) luaL_checkinteger ( L, 1 ) ) ;
-  const char * path = luaL_checklstring ( L, 2, & s ) ;
+  const char * path = luaL_checklstring ( L, 1, & s ) ;
+  const mode_t m = 00700 |
+    ( 007777 & (lua_Unsigned) luaL_optinteger ( L, 2, 00700 ) ) ;
 
   if ( ( 0 < s ) && path && * path ) {
-    /*
-    if ( mkpath ( m, (char *) path, s ) ) {
-      i = errno ;
-      return luaL_error ( L, "mkpath( %s, %d ) failed: %s (errno %d)",
-        path, m, strerror ( i ), i ) ;
-    }
-    */
     return res_bool_zero ( L, mkpath ( m, (char *) path, s ) ) ;
   }
 
-  return luaL_argerror ( L, 1, "invalid dir name" ) ;
+  return luaL_argerror ( L, 1, "invalid pathname" ) ;
 }
 
 /* create special files with mknod(2) */
@@ -437,7 +431,6 @@ static int Sftruncate ( lua_State * const L )
 /* touch(1) like function that uses mknod(2) */
 static int l_touch ( lua_State * const L )
 {
-  int e = 0, i = -3 ;
   const char * path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {

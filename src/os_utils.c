@@ -187,14 +187,3 @@ static int Lcheck_pidfile ( lua_State * L )
 }
 #endif
 
-/*
-#ifdef OSLinux
-#include "hd_down.c"
-static int Lhd_down ( lua_State * L )
-{
-  lua_pushinteger ( L, hddown () ) ;
-  return 1 ;
-}
-#endif
-*/
-

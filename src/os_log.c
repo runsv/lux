@@ -78,13 +78,3 @@ static int Lwrite2cons ( lua_State * L )
   return 0 ;
 }
 
-/*
-static void Log ( const char co, const int err, const char * msg )
-{
-}
-
-static void setup_io ( void )
-{
-}
-*/
-

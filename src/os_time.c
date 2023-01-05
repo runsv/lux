@@ -484,9 +484,6 @@ static int Sclock_settime ( lua_State * L )
 
 /*
  * adjust the system clock
- */
-
-#if defined (OSLinux)
 
 static int hwclock_runs_in_utc ( void )
 {
@@ -498,11 +495,14 @@ static int hwclock_runs_in_utc ( void )
 
     while ( NULL != fgets ( buf , sizeof ( buf ) - 1, fp ) ) {
       ++ i ;
+
       if ( 3 >= i ) {
         char * str = strtok ( buf, " \t\n" ) ;
+
         if ( str && * str ) {
           r = strcmp ( "LOCAL", str ) ? 1 : 0 ;
         }
+
         break ;
       }
     }
@@ -513,133 +513,5 @@ static int hwclock_runs_in_utc ( void )
 
   return 1 ;
 }
-
-static int initialize_system_clock_timezone ( void )
-{
-  int i = 0 ;
-  const time_t now = time ( NULL ) ;
-  const struct tm * t = localtime ( & now ) ;
-  const int seconds_west = - t -> tm_gmtoff ;
-  const struct timeval * ztv = NULL ;
-  struct timezone tz = { 0, 0 } ;
-
-  if ( hwclock_runs_in_utc () ) {
-    /* prevent the next call from adjusting the system clock */
-    i += settimeofday ( ztv, & tz ) ;
-  }
-
-  /* Set the RTC/FAT local time offset, and (if not UTC) adjust the system
-   * clock from local-time-as-if-UTC to UTC.
-   */
-  tz . tz_minuteswest = seconds_west / 60 ;
-  i += settimeofday ( ztv, & tz ) ;
-
-  return i ;
-}
-
-static int Lhwclock_runs_in_utc ( lua_State * L )
-{
-  lua_pushboolean ( L, hwclock_runs_in_utc () ) ;
-  return 1 ;
-}
-
-static int Linitialize_system_clock_timezone ( lua_State * L )
-{
-  lua_pushinteger ( L, initialize_system_clock_timezone () ) ;
-  return 1 ;
-}
-
-#elif defined (OSfreebsd) || defined (OSdragonfly)
-
-static int hwclock_runs_in_utc ( void )
-{
-  int local = 0 ;
-  size_t siz = sizeof ( local ) ;
-  int oid [ CTL_MAXNAME ] = { 0 } ;
-  size_t len = sizeof ( oid ) / sizeof ( * oid ) ;
-  struct stat st ;
-
-  sysctlnametomib ( "machdep.wall_cmos_clock", oid, & len ) ;
-  sysctl ( oid, len, & local, & siz, 0, 0 ) ;
-  if ( local ) { return 1 ; }
-
-  //return 0 > access ( "/etc/wall_cmos_clock", F_OK ) ;
-  return 0 > stat ( "/etc/wall_cmos_clock", & st ) ;
-}
-
-static void initialize_system_clock_timezone ( const char * pname )
-{
-  const struct timeval * ztv = NULL ;
-  const int utc = hwclock_runs_in_UTC () ;
-  const time_t now = time ( NULL ) ;
-  const struct tm * l = localtime ( & now ) ;
-  const int seconds_west = - l -> tm_gmtoff ;
-  struct timezone tz = { 0, 0 } ;
-
-  if ( utc ) {
-    /* zero out the tz_minuteswest if it is non-zero */
-    settimeofday ( ztv, & tz ) ;
-  } else {
-    int old_seconds_west = 0 ;
-    int disable_rtc_set = 0, old_disable_rtc_set = 0 ;
-    int wall_cmos_clock = ! utc, old_wall_cmos_clock = 0 ;
-    size_t siz = 0 ;
-    struct timeval tv = { 0, 0 } ;
-
-    siz = sizeof ( old_disable_rtc_set ) ;
-    sysctlbyname ( "machdep.disable_rtc_set", & old_disable_rtc_set, & siz,
-      & disable_rtc_set, sizeof ( disable_rtc_set ) ) ;
-
-    siz = sizeof ( old_wall_cmos_clock ) ;
-    sysctlbyname ( "machdep.wall_cmos_clock", & old_wall_cmos_clock, & siz,
-      & wall_cmos_clock, sizeof ( wall_cmos_clock ) ) ;
-
-    siz = sizeof ( old_seconds_west ) ;
-    sysctlbyname ( "machdep.adjkerntz", & old_seconds_west, & siz,
-      & seconds_west, sizeof ( seconds_west ) ) ;
-
-    if ( 0 == old_wall_cmos_clock ) { old_seconds_west = 0 ; }
-
-    if ( disable_rtc_set != old_disable_rtc_set ) {
-      sysctlbyname ( "machdep.disable_rtc_set", 0, 0,
-        & old_disable_rtc_set, sizeof ( old_disable_rtc_set ) ) ;
-    }
-
-    /* Adjust the system clock from local-time-as-if-UTC to UTC,
-     * and zero out the tz_minuteswest if it is non-zero
-     */
-    gettimeofday ( & tv, 0 ) ;
-    tv . tv_sec += seconds_west - old_seconds_west ;
-    settimeofday ( & tv, & tz ) ;
-
-    if ( seconds_west != old_seconds_west ) {
-      if ( pname && * pname ) {
-        (void) fprintf ( stderr,
-          "\n%s: WARNING:\tTimezone wrong.\n"
-          "Please put machdep.adjkerntz=%i and machdep.wall_cmos_clock=1 in loader.conf.\n\n"
-          , pname, seconds_west
-        ) ;
-      } else {
-        (void) fprintf ( stderr,
-          "\nWARNING:\tTimezone wrong.\n"
-          "Please put machdep.adjkerntz=%i and machdep.wall_cmos_clock=1 in loader.conf.\n\n"
-          , seconds_west
-        ) ;
-      }
-    }
-  }
-}
-
-static int Lhwclock_runs_in_utc ( lua_State * L )
-{
-  lua_pushboolean ( L, hwclock_runs_in_utc () ) ;
-  return 1 ;
-}
-
-static int Linitialize_system_clock_timezone ( lua_State * L )
-{
-  return 0 ;
-}
-
-#endif
+ */
 

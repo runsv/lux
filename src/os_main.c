@@ -271,17 +271,6 @@ static int res_false ( lua_State * const L )
   return 1 ;
 }
 
-static int arg_is_fd ( lua_State * const L, const int index )
-{
-  const int i = luaL_checkinteger ( L, index ) ;
-
-  if ( 0 > i ) {
-    return luaL_argerror ( L, index, "invalid fd" ) ;
-  }
-
-  return i ;
-}
-
 /* include the Lua wrapper functions */
 #include "os_proc.c"
 #include "os_time.c"
@@ -1577,7 +1566,6 @@ static const luaL_Reg sys_func [ ] =
   { "clock_settime",		Sclock_settime		},
 #endif
 #if defined (OSLinux)
-  { "hwclock_runs_in_utc",	Lhwclock_runs_in_utc	},
 #elif defined (OSfreebsd)
 #elif defined (OSnetbsd)
 #elif defined (OSopenbsd)
@@ -1992,6 +1980,11 @@ void regMod ( lua_State * const L, const char * const name )
  * are needed, define them here.
  */
 int luaopen_lux ( lua_State * const L )
+{
+  return openMod ( L ) ;
+}
+
+int luaopen_luana ( lua_State * const L )
 {
   return openMod ( L ) ;
 }
