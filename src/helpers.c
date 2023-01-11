@@ -437,7 +437,22 @@ static void strncopy ( char * const dest, const char * const src, const size_t n
   for ( ; n > i ; ++ i ) { dest [ i ] = '\0' ; }
 }
 
-static size_t strcopy ( char * const dest, const char * const src, const size_t n )
+static size_t strcopy ( char * dest, const char * src, const size_t siz )
+{
+  size_t i ;
+
+  for ( i = 0 ; ( i + 1 < siz ) && ( src [ i ] != '\0' ) ; ++ i ) {
+    dest [ i ] = src [ i ] ;
+  }
+
+  for ( ; i < siz ; ++ i ) {
+    dest [ i ] = '\0' ;
+  }
+
+  return i ;
+}
+
+static size_t strcopy2 ( char * const dest, const char * const src, const size_t n )
 {
   if ( ( 0 < n ) && dest && src && * src ) {
     size_t i ;
