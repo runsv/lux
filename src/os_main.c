@@ -1668,6 +1668,7 @@ static const luaL_Reg sys_func [ ] =
   { "stat",			Sstat		},
   { "lstat",			Slstat		},
   { "fstat",			Sfstat		},
+  { "S_ISDIR",			mode_isdir	},
   { "readlink",			Sreadlink	},
   { "fdcompare",		Lfdcompare	},
   { "is_tmpfs",			Lis_tmpfs	},

@@ -1101,13 +1101,20 @@ static int Slstat ( lua_State * const L )
 /* wrapper to the fstat syscall */
 static int Sfstat ( lua_State * const L )
 {
-  int fd = luaL_checkinteger ( L, 1 ) ;
+  const int fd = luaL_checkinteger ( L, 1 ) ;
 
   if ( 0 <= fd ) {
     return do_stat ( L, 'F', fd, NULL ) ;
   }
 
   return luaL_argerror ( L, 1, "invalid fd" ) ;
+}
+
+static int mode_isdir ( lua_State * const L )
+{
+  const mode_t mode = luaL_checkinteger ( L, 1 ) ;
+  lua_pushboolean ( L, S_ISDIR ( mode ) ) ;
+  return 1 ;
 }
 
 /* copies the contents of one file to another */

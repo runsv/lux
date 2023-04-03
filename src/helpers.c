@@ -452,21 +452,6 @@ static size_t strcopy ( char * dest, const char * src, const size_t siz )
   return i ;
 }
 
-static size_t strcopy2 ( char * const dest, const char * const src, const size_t n )
-{
-  if ( ( 0 < n ) && dest && src && * src ) {
-    size_t i ;
-
-    for ( i = 0 ; ( i + 1 < n ) && src [ i ] ; ++ i )
-    { dest [ i ] = src [ i ] ; }
-
-    dest [ i ] = '\0' ;
-    return i ;
-  }
-
-  return 0 ;
-}
-
 /* our version of strlcat */
 /*
 static size_t str_cat ( char * dst, const char * src, const size_t size )
