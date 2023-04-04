@@ -1110,10 +1110,52 @@ static int Sfstat ( lua_State * const L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-static int mode_isdir ( lua_State * const L )
+static int mode_is_blk ( lua_State * const L )
 {
   const mode_t mode = luaL_checkinteger ( L, 1 ) ;
-  lua_pushboolean ( L, S_ISDIR ( mode ) ) ;
+  lua_pushboolean ( L, S_ISBLK( mode ) ) ;
+  return 1 ;
+}
+
+static int mode_is_chr ( lua_State * const L )
+{
+  const mode_t mode = luaL_checkinteger ( L, 1 ) ;
+  lua_pushboolean ( L, S_ISCHR( mode ) ) ;
+  return 1 ;
+}
+
+static int mode_is_dir ( lua_State * const L )
+{
+  const mode_t mode = luaL_checkinteger ( L, 1 ) ;
+  lua_pushboolean ( L, S_ISDIR( mode ) ) ;
+  return 1 ;
+}
+
+static int mode_is_fifo ( lua_State * const L )
+{
+  const mode_t mode = luaL_checkinteger ( L, 1 ) ;
+  lua_pushboolean ( L, S_ISFIFO( mode ) ) ;
+  return 1 ;
+}
+
+static int mode_is_lnk ( lua_State * const L )
+{
+  const mode_t mode = luaL_checkinteger ( L, 1 ) ;
+  lua_pushboolean ( L, S_ISLNK( mode ) ) ;
+  return 1 ;
+}
+
+static int mode_is_reg ( lua_State * const L )
+{
+  const mode_t mode = luaL_checkinteger ( L, 1 ) ;
+  lua_pushboolean ( L, S_ISREG( mode ) ) ;
+  return 1 ;
+}
+
+static int mode_is_sock ( lua_State * const L )
+{
+  const mode_t mode = luaL_checkinteger ( L, 1 ) ;
+  lua_pushboolean ( L, S_ISSOCK( mode ) ) ;
   return 1 ;
 }
 
