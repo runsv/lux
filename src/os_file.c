@@ -340,7 +340,7 @@ static int Sfchmod ( lua_State * const L )
   return res_bool_zero ( L, fchmod ( fd, m ) ) ;
 }
 
-/* wrapper to link that creates hard links */
+/* wrapper to link() that creates hard links */
 static int u_link ( lua_State * const L )
 {
   const char * target = luaL_checkstring ( L, 1 ) ;
@@ -360,26 +360,20 @@ static int u_link ( lua_State * const L )
   return luaL_error ( L, "target and destination file names required" ) ;
 }
 
-/* wrapper to symlink */
-static int Ssymlink ( lua_State * const L )
+/* wrapper to symlink() */
+static int u_symlink ( lua_State * const L )
 {
   const char * target = luaL_checkstring ( L, 1 ) ;
   const char * dest = luaL_checkstring ( L, 2 ) ;
 
   if ( target && dest && * target && * dest ) {
-    if ( symlink ( target, dest ) ) {
-      const int e = errno ;
-      return luaL_error ( L, "symlink( %s, %s ) failed: %s (errno %d)",
-        target, dest, strerror ( e ), e ) ;
-    }
-
-    return 0 ;
+    return res_bool_zero ( L, symlink ( target, dest ) ) ;
   }
 
   return luaL_error ( L, "target and destination file names required" ) ;
 }
 
-/* wrapper function for the truncate syscall */
+/* wrapper function for the truncate() syscall */
 static int Struncate ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
@@ -428,13 +422,25 @@ static int Sftruncate ( lua_State * const L )
   return 0 ;
 }
 
+static int l_create_file ( lua_State * const L )
+{
+  const char * path = luaL_checkstring ( L, 1 ) ;
+
+  if ( path && * path ) {
+    const mode_t mode = luaL_optinteger ( L, 2, 00600 ) ;
+    return res_bool_zero ( L, create_file ( path, mode ) ) ;
+  }
+
+  return luaL_argerror ( L, 1, "filename required" ) ;
+}
+
 /* touch(1) like function that uses mknod(2) */
 static int l_touch ( lua_State * const L )
 {
   const char * path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {
-    res_bool_zero ( L, touch ( path ) ) ;
+    return res_bool_zero ( L, touch ( path ) ) ;
   }
 
   return luaL_argerror ( L, 1, "filename required" ) ;

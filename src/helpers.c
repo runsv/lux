@@ -673,6 +673,23 @@ static int fd_has_data ( const int fd )
   return 1 == select ( 1 + fd, & fds, NULL, NULL, & tv ) ;
 }
 
+static int create_file ( const char * const path, mode_t mode )
+{
+  int fd ;
+
+  mode |= 00600 ;
+  fd = open ( path,
+    O_CREAT | O_WRONLY | O_TRUNC | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY, mode ) ;
+
+  if ( 0 <= fd ) {
+    int r = fchmod ( fd, mode ) ;
+    r += close_fd ( fd ) ;
+    return r ;
+  }
+
+  return -1 ;
+}
+
 static int touch ( const char * const path )
 {
   if ( path && * path ) {

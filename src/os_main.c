@@ -232,9 +232,14 @@ static int res_bool_zero ( lua_State * const L, const int res )
   if ( res ) {
     const int e = errno ;
     lua_pushboolean ( L, 0 ) ;
-    (void) lua_pushstring ( L, strerror ( e ) ) ;
-    lua_pushinteger ( L, e ) ;
-    return 3 ;
+
+    if ( 0 < e ) {
+      (void) lua_pushstring ( L, strerror ( e ) ) ;
+      lua_pushinteger ( L, e ) ;
+      return 3 ;
+    }
+
+    return 1 ;
   }
 
   lua_pushboolean ( L, 1 ) ;
@@ -1660,9 +1665,10 @@ static const luaL_Reg sys_func [ ] =
   { "mkpath",			l_mkpath	},
   { "rmdir",			u_rmdir		},
   { "link",			u_link		},
-  { "symlink",			Ssymlink	},
+  { "symlink",			u_symlink	},
   { "mkfifo",			u_mkfifo	},
   { "mknod",			u_mknod		},
+  { "create_file",		l_create_file	},
   { "touch",			l_touch		},
   { "create",			Lcreate		},
   { "stat",			Sstat		},
