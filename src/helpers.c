@@ -682,31 +682,30 @@ static int create_file ( const char * const path, mode_t mode )
     O_CREAT | O_WRONLY | O_TRUNC | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY, mode ) ;
 
   if ( 0 <= fd ) {
-    int r = fchmod ( fd, mode ) ;
-    r += close_fd ( fd ) ;
-    return r ;
+    return fchmod ( fd, mode ) + close_fd ( fd ) ;
   }
 
   return -1 ;
 }
 
-static int touch ( const char * const path )
+static int touch ( const char * const path, struct timeval times [ 2 ] )
 {
   if ( path && * path ) {
+    int r = 0 ;
+
     if ( access ( path, F_OK ) ) {
+      /* path does not exist, create it */
       const int fd = open ( path,
-        O_CREAT | O_RDWR | O_TRUNC | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY, 00644 ) ;
+        O_CREAT | O_WRONLY | O_TRUNC | O_CLOEXEC | O_NOFOLLOW | O_NOCTTY, 00600 ) ;
       if ( 0 <= fd ) { (void) close_fd ( fd ) ; }
-      else { return -3 ; }
+      else { return -2 ; }
       /*
       if ( mknod ( path, S_IFREG | 00644, 0 ) && EEXIST != errno )
-      { return -5 ; }
+      { return -3 ; }
       */
-    } else if ( lutimes ( path, NULL ) ) {
-      return -2 ;
     }
 
-    return 0 ;
+    return lutimes ( path, times ) ;
   }
 
   return -1 ;
@@ -716,20 +715,14 @@ static int create ( const char * const path, mode_t mode,
   const uid_t uid, const gid_t gid )
 {
   if ( path && * path ) {
-    /*
-    int i = touch ( path ) || chmod ( path, mode )
-      || chown ( path, uid, gid ) ;
-
-    if ( i ) { (void) printf ( "Failed creating %s properly\n", path ) ; }
-    */
-    mode = mode ? mode : 00644 ;
+    mode = mode ? mode : 00600 ;
     mode &= 007777 ;
 
-    return touch ( path ) || chmod ( path, mode )
-      || chown ( path, uid, gid ) ;
+    return create_file ( path, mode ) + chmod ( path, mode )
+      + chown ( path, uid, gid ) ;
   }
 
-  return -3 ;
+  return -1 ;
 }
 
 static int make_dir ( const char * const path, const mode_t mode )
