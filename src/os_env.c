@@ -1,11 +1,11 @@
 /*
- * wrapper functions to environment related functions
+ * wrapper functions for environment related functions
  */
 
 /* wrapper function for clearenv that clears the current
  * process' environment
  */
-static int Sclearenv ( lua_State * L )
+static int u_clearenv ( lua_State * L )
 {
 /* without the use of clearenv () :
   extern char ** environ ;
@@ -15,64 +15,57 @@ static int Sclearenv ( lua_State * L )
   return 1 ;
 }
 
-/* wrapper function for unsetenv */
-static int Sunsetenv ( lua_State * L )
+/* wrapper function for unsetenv() */
+static int u_unsetenv ( lua_State * L )
 {
   const char * str = luaL_checkstring ( L, 1 ) ;
 
   if ( str && * str ) {
-    const int i = unsetenv ( str ) ;
-    const int e = errno ;
-
-    lua_pushinteger ( L, i ) ;
-    if ( i ) {
-      lua_pushinteger ( L, e ) ;
-      return 2 ;
-    }
-
-    return 1 ;
+    return res_bool_zero ( L, unsetenv ( str ) ) ;
   }
 
-  return 0 ;
+  return luaL_error ( L, "varname required" ) ;
 }
 
-/* wrapper function for getenv */
-static int Sgetenv ( lua_State * L )
+/* wrapper function for getenv() */
+static int u_getenv ( lua_State * L )
 {
   const char * var = luaL_checkstring ( L, 1 ) ;
 
   if ( var && * var ) {
     char * str = getenv ( var ) ;
 
-    if ( str && * str ) {
+    if ( str ) {
       (void) lua_pushstring ( L, str ) ;
       return 1 ;
     }
   }
 
-  return 0 ;
+  lua_pushnil ( L ) ;
+  return 1 ;
 }
 
 #if defined (__GLIBC__) && defined (_GNU_SOURCE)
-static int Ssecure_getenv ( lua_State * L )
+static int u_secure_getenv ( lua_State * L )
 {
   const char * var = luaL_checkstring ( L, 1 ) ;
 
   if ( var && * var ) {
-    char * str = getenv ( var ) ;
+    char * str = secure_getenv ( var ) ;
 
-    if ( str && * str ) {
+    if ( str ) {
       (void) lua_pushstring ( L, str ) ;
       return 1 ;
     }
   }
 
-  return 0 ;
+  lua_pushnil ( L ) ;
+  return 1 ;
 }
 #endif
 
-/* wrapper function for setenv */
-static int Ssetenv ( lua_State * L )
+/* wrapper function for setenv() */
+static int u_setenv ( lua_State * L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -81,34 +74,25 @@ static int Ssetenv ( lua_State * L )
     const char * str = luaL_checkstring ( L, 2 ) ;
 
     if ( var && str && * var ) {
-      int e = 0, i = 3 ;
+      int i = 1 ;
 
-      if ( ( 2 < n ) && lua_isboolean ( L, 1 ) ) {
+      if ( ( 2 < n ) && lua_isboolean ( L, 3 ) ) {
         i = lua_toboolean ( L, 3 ) ;
       }
 
-      i = setenv ( var, str, i ) ;
-      e = errno ;
-      lua_pushinteger ( L, i ) ;
-
-      if ( i ) {
-        lua_pushinteger ( L, e ) ;
-        return 2 ;
-      }
-
-      return 1 ;
+      return res_bool_zero ( L, setenv ( var, str, i ) ) ;
     }
   }
 
-  return 0 ;
+  return luaL_error ( L, "varname and value strings required" ) ;
 }
 
-/* wrapper function for putenv
+/* wrapper function for putenv()
  * Beware: the given string has to be strdup()ed
  * (since it will be popped of the Lua stack when the function returns)
  * and the copy will not be free()ed by us !! Possible memory leaks !!
  */
-static int Sputenv ( lua_State * L )
+static int u_putenv ( lua_State * L )
 {
   const char * str = luaL_checkstring ( L, 1 ) ;
 

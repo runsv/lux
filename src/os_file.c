@@ -434,7 +434,7 @@ static int l_create_file ( lua_State * const L )
   return luaL_argerror ( L, 1, "filename required" ) ;
 }
 
-/* touch(1) like function that uses mknod(2) */
+/* touch(1) like function */
 static int l_touch ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;

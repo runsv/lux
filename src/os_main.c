@@ -1631,14 +1631,14 @@ static const luaL_Reg sys_func [ ] =
   /* end of imported functions from "os_sig.c" */
 
   /* functions imported from "os_env.c" : */
-  { "clearenv",			Sclearenv	},
-  { "unsetenv",			Sunsetenv	},
-  { "getenv",			Sgetenv		},
+  { "clearenv",			u_clearenv	},
+  { "unsetenv",			u_unsetenv	},
+  { "getenv",			u_getenv	},
 #if defined (__GLIBC__) && defined (_GNU_SOURCE)
-  { "secure_getenv",		Ssecure_getenv	},
+  { "secure_getenv",		u_secure_getenv	},
 #endif
-  { "setenv",			Ssetenv		},
-  { "putenv",			Sputenv		},
+  { "setenv",			u_setenv	},
+  { "putenv",			u_putenv	},
   { "get_environ",		Lget_environ	},
   { "addenv",			Laddenv		},
   { "newenv",			Lnewenv		},
