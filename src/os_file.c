@@ -437,17 +437,30 @@ static int l_create_file ( lua_State * const L )
 /* touch(1) like function that uses mknod(2) */
 static int l_touch ( lua_State * const L )
 {
-  const char * path = luaL_checkstring ( L, 1 ) ;
+  const int n = lua_gettop ( L ) ;
 
-  if ( path && * path ) {
-    return res_bool_zero ( L, touch ( path ) ) ;
+  if ( 0 < n ) {
+    const char * path = luaL_checkstring ( L, 1 ) ;
+
+    if ( path && * path ) {
+      if ( 5 > n ) {
+        return res_bool_zero ( L, touch ( path, NULL ) ) ;
+      } else {
+        struct timeval tv [ 2 ] ;
+        tv [ 0 ] . tv_sec = luaL_checkinteger ( L, 2 ) ;
+        tv [ 0 ] . tv_usec = luaL_checkinteger ( L, 3 ) ;
+        tv [ 1 ] . tv_sec = luaL_checkinteger ( L, 4 ) ;
+        tv [ 1 ] . tv_usec = luaL_checkinteger ( L, 5 ) ;
+        return res_bool_zero ( L, touch ( path, tv ) ) ;
+      }
+    }
   }
 
-  return luaL_argerror ( L, 1, "filename required" ) ;
+  return luaL_error ( L, "filename and time arguments required" ) ;
 }
 
 /* make sure a given file exists and has the right permissions */
-static int Lcreate ( lua_State * const L )
+static int l_create ( lua_State * const L )
 {
   const char * path = NULL ;
   const int n = lua_gettop ( L ) ;

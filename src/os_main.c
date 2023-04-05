@@ -1670,7 +1670,7 @@ static const luaL_Reg sys_func [ ] =
   { "mknod",			u_mknod		},
   { "create_file",		l_create_file	},
   { "touch",			l_touch		},
-  { "create",			Lcreate		},
+  { "create",			l_create	},
   { "stat",			Sstat		},
   { "lstat",			Slstat		},
   { "fstat",			Sfstat		},
