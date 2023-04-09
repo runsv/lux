@@ -949,7 +949,7 @@ static int Stcsetpgrp ( lua_State * const L )
 /* wrapper function for exit
  * (not really necessary since os.exit does the same)
  */
-static int Sexit ( lua_State * const L )
+static int u_exit ( lua_State * const L )
 {
   exit ( luaL_optinteger ( L, 1, 0 ) ) ;
   /* not reached */
@@ -957,7 +957,7 @@ static int Sexit ( lua_State * const L )
 }
 
 /* binding for the abort(3) function */
-static int Sabort ( lua_State * const L )
+static int u_abort ( lua_State * const L )
 {
   abort () ;
   /* not reached */
@@ -967,7 +967,7 @@ static int Sabort ( lua_State * const L )
 /* wrapper function for exit
  * (not really necessary since os.exit does the same)
  */
-static int S_exit ( lua_State * const L )
+static int u__exit ( lua_State * const L )
 {
   _exit ( luaL_optinteger ( L, 1, 0 ) ) ;
   /* not reached */
@@ -975,7 +975,7 @@ static int S_exit ( lua_State * const L )
 }
 
 /* wrapper function for the fork syscall */
-static int Sfork ( lua_State * const L )
+static int u_fork ( lua_State * const L )
 {
   pid_t p = 0 ;
 
@@ -984,8 +984,10 @@ static int Sfork ( lua_State * const L )
 
   if ( 0 > p ) {
     const int e = errno ;
-    return luaL_error ( L, "fork() failed: %s (errno %d)",
-      strerror ( e ), e ) ;
+    lua_pushnil ( L ) ;
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
   }
 
   lua_pushinteger ( L, p ) ;
@@ -1027,7 +1029,7 @@ static int Lxfork ( lua_State * const L )
 }
 
 /* wrapper function for the umask(2) syscall */
-static int Sumask ( lua_State * const L )
+static int u_umask ( lua_State * const L )
 {
   lua_pushinteger ( L, umask ( 00077 & (mode_t) luaL_checkinteger ( L, 1 ) ) ) ;
   return 1 ;
