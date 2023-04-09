@@ -357,24 +357,25 @@ static int Lbuf_read_close ( lua_State * const L )
   return luaL_argerror ( L, 1, "invalid fd" ) ;
 }
 
-/* wrapper function for the pipe syscall */
-static int Spipe ( lua_State * const L )
+/* wrapper function for the pipe() syscall */
+static int u_pipe ( lua_State * const L )
 {
   int p [ 2 ] = { -1 } ;
 
   if ( pipe ( p ) ) {
-    const int i = errno ;
-    lua_pushinteger ( L, -1 ) ;
-    lua_pushinteger ( L, i ) ;
-  } else {
-    lua_pushinteger ( L, p [ 0 ] ) ;
-    lua_pushinteger ( L, p [ 1 ] ) ;
+    const int e = errno ;
+    lua_pushnil ( L ) ;
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
   }
 
+  lua_pushinteger ( L, p [ 0 ] ) ;
+  lua_pushinteger ( L, p [ 1 ] ) ;
   return 2 ;
 }
 
-/* another wrapper for the pipe syscall */
+/* another wrapper for the pipe() syscall */
 static int Lpipe ( lua_State * const L )
 {
   int p [ 2 ] ;
