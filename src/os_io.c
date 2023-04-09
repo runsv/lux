@@ -375,6 +375,27 @@ static int u_pipe ( lua_State * const L )
   return 2 ;
 }
 
+#if defined (OSLinux)
+/* wrapper function for the pipe2() syscall */
+static int u_pipe2 ( lua_State * const L )
+{
+  int p [ 2 ] = { -1 } ;
+  int f = luaL_optinteger ( L, 1, 0 ) ;
+
+  if ( pipe2 ( p, f ) ) {
+    const int e = errno ;
+    lua_pushnil ( L ) ;
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
+  }
+
+  lua_pushinteger ( L, p [ 0 ] ) ;
+  lua_pushinteger ( L, p [ 1 ] ) ;
+  return 2 ;
+}
+#endif
+
 /* another wrapper for the pipe() syscall */
 static int Lpipe ( lua_State * const L )
 {

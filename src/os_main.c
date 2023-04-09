@@ -1735,7 +1735,7 @@ static const luaL_Reg sys_func [ ] =
   { "buf_read",			Lbuf_read	},
   { "buf_read_close",		Lbuf_read_close		},
   { "write",			Swrite	},
-  { "pipe",			Spipe	},
+  { "pipe",			u_pipe	},
   { "open_pipe",		Lpipe	},
   { "stream_pipe",		Lstream_pipe	},
   /*
@@ -1759,6 +1759,7 @@ static const luaL_Reg sys_func [ ] =
   { "chvt",			l_chvt	},
 #if defined (OSLinux)
   { "memfd_create",		Smemfd_create	},
+  { "pipe2",			u_pipe2	},
 #endif
   /* end of imported functions from "os_io.c" */
 
