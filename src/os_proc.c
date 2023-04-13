@@ -16,6 +16,7 @@ enum {
 /* helper function that checks a returned wait(pid)(2) status argument */
 static int check_exit_status ( lua_State * const L, const int wstatus )
 {
+  /* check the wait status now */
   if ( WIFEXITED( wstatus ) ) {
     (void) lua_pushstring ( L, "exited" ) ;
     lua_pushinteger ( L, WEXITSTATUS( wstatus ) ) ;
@@ -40,45 +41,6 @@ static int check_exit_status ( lua_State * const L, const int wstatus )
     lua_pushinteger ( L, wstatus ) ;
   }
 
-  return 3 ;
-}
-
-static int Lget_exit_status ( lua_State * const L,
-  const pid_t pid, const int s )
-{
-  /* check the wait status now */
-  if ( WIFEXITED( s ) ) {
-    lua_pushinteger ( L, WEXITSTATUS( s ) ) ;
-    lua_pushinteger ( L, 1 ) ;
-    lua_pushinteger ( L, pid ) ;
-    return 3 ;
-  } else if ( WIFSIGNALED( s ) ) {
-    lua_pushinteger ( L, WTERMSIG( s ) ) ;
-    lua_pushinteger ( L, 2 ) ;
-    lua_pushinteger ( L, pid ) ;
-#ifdef WCOREDUMP
-    if ( WCOREDUMP( s ) ) {
-      /* lua_pushinteger ( L, 5 ) ; */
-      lua_pushboolean ( L, 1 ) ;
-      return 4 ;
-    }
-#endif
-    return 3 ;
-  } else if ( WIFSTOPPED( s ) ) {
-    lua_pushinteger ( L, WSTOPSIG( s ) ) ;
-    lua_pushinteger ( L, 3 ) ;
-    lua_pushinteger ( L, pid ) ;
-    return 3 ;
-  } else if ( WIFCONTINUED( s ) ) {
-    lua_pushinteger ( L, SIGCONT ) ;
-    lua_pushinteger ( L, 4 ) ;
-    lua_pushinteger ( L, pid ) ;
-    return 3 ;
-  }
-
-  lua_pushinteger ( L, s ) ;
-  lua_pushinteger ( L, 0 ) ;
-  lua_pushinteger ( L, pid ) ;
   return 3 ;
 }
 
@@ -1182,6 +1144,11 @@ static int u_waitpid ( lua_State * const L )
   }
 
   lua_pushinteger ( L, p ) ;
+
+  if ( 0 == p ) {
+    return 1 ;
+  }
+
   return check_exit_status ( L, w ) ;
 }
 
