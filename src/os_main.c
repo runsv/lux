@@ -1500,6 +1500,7 @@ static const luaL_Reg sys_func [ ] =
   { "abort",			u_abort		},
   { "_exit",			u__exit		},
   { "pause",			u_pause		},
+  { "do_pause",			l_pause		},
   { "fork",			u_fork		},
   { "chroot",			u_chroot	},
   { "chdir",			u_chdir		},

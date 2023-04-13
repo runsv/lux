@@ -788,6 +788,16 @@ static int u_pause ( lua_State * const L )
   return 0 ;
 }
 
+static int l_pause ( lua_State * const L )
+{
+  while ( 1 ) {
+    /* the return value of pause() is always the same and not relevant */
+    (void) pause () ;
+  }
+
+  return 0 ;
+}
+
 /* wrapper function for the getpgrp syscall
  * (POSIX.1 version without args that always succeeds
  * and returns the PGID of the calling process)
