@@ -14,7 +14,7 @@ enum {
 } ;
 
 /* helper function that checks a returned wait(pid)(2) status argument */
-static int check_exit_status ( lua_State * const L, const int wstatus )
+static int get_exit_status ( lua_State * const L, const int wstatus )
 {
   /* check the wait status now */
   if ( WIFEXITED( wstatus ) ) {
@@ -42,40 +42,6 @@ static int check_exit_status ( lua_State * const L, const int wstatus )
   }
 
   return 3 ;
-}
-
-static int Lwait4pid ( lua_State * const L,
-  const pid_t pid, const char nohang )
-{
-  int i = 0 ;
-  pid_t p = 0 ;
-
-  if ( 0 > pid ) {
-    return luaL_error ( L, "invalid PID %d", pid ) ;
-  } else if ( kill ( pid, 0 ) ) {
-    i = errno ;
-    return luaL_error ( L, "PID %d: %s (errno %d)",
-      pid, strerror ( i ), i ) ;
-  }
-
-  do {
-    i = 0 ;
-    p = waitpid ( pid, & i, nohang ? WNOHANG : 0 ) ;
-  } while ( 0 > p && EINTR == errno ) ;
-
-  if ( 0 > p ) {
-    i = errno ;
-    return luaL_error ( L, "waitpid( %d ) failed: %s (errno %d)",
-      pid, strerror ( i ), i ) ;
-  } else if ( 0 == p ) {
-    lua_pushinteger ( L, 0 ) ;
-    return 1 ;
-  } else if ( 0 < p && pid != p ) {
-    return luaL_error ( L, "waitpid( %d ) returned %d != %d",
-      pid, p, pid ) ;
-  }
-
-  return Lget_exit_status ( L, pid, i ) ;
 }
 
 /* helper function for the execv* bindings */
@@ -1118,7 +1084,7 @@ static int u_wait ( lua_State * const L )
   }
 
   lua_pushinteger ( L, p ) ;
-  return check_exit_status ( L, w ) ;
+  return get_exit_status ( L, w ) ;
 }
 
 /* wrapper function for the waitpid(2) syscall */
@@ -1149,13 +1115,7 @@ static int u_waitpid ( lua_State * const L )
     return 1 ;
   }
 
-  return check_exit_status ( L, w ) ;
-}
-
-/* wait(pid)s for a child processes without blocking */
-static int Lwaitpid_nohang ( lua_State * const L )
-{
-  return Lwait4pid ( L, luaL_checkinteger ( L, 1 ), 1 ) ;
+  return get_exit_status ( L, w ) ;
 }
 
 /* wrapper for the waitid(2) syscall */

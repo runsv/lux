@@ -1491,8 +1491,6 @@ static const luaL_Reg sys_func [ ] =
   { "wait",			u_wait		},
   { "waitpid",			u_waitpid	},
   { "waitid",			Swaitid		},
-  { "waitpid_nohang",		Lwaitpid_nohang	},
-  { "wait_nohang",		Lwaitpid_nohang	},
   { "waitid_exited_nohang",	Lwaitid_exited_nohang	},
   { "set_subreaper",		Lset_subreaper	},
   { "is_subreaper",		Lis_subreaper	},
