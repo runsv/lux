@@ -191,49 +191,49 @@ static int Lvfork_exec ( lua_State * const L, const unsigned long int f )
   return luaL_error ( L, "string args required" ) ;
 }
 
-/* wrapper function for getuid */
+/* wrapper function for getuid(2) */
 static int Sgetuid ( lua_State * const L )
 {
   lua_pushinteger ( L, getuid () ) ;
   return 1 ;
 }
 
-/* wrapper function for geteuid */
+/* wrapper function for geteuid(2) */
 static int Sgeteuid ( lua_State * const L )
 {
   lua_pushinteger ( L, geteuid () ) ;
   return 1 ;
 }
 
-/* wrapper function for getgid */
+/* wrapper function for getgid(2) */
 static int Sgetgid ( lua_State * const L )
 {
   lua_pushinteger ( L, getgid () ) ;
   return 1 ;
 }
 
-/* wrapper function for getegid */
+/* wrapper function for getegid(2) */
 static int Sgetegid ( lua_State * const L )
 {
   lua_pushinteger ( L, getegid () ) ;
   return 1 ;
 }
 
-/* wrapper function for getpid */
+/* wrapper function for getpid(2) */
 static int Sgetpid ( lua_State * const L )
 {
   lua_pushinteger ( L, getpid () ) ;
   return 1 ;
 }
 
-/* wrapper function for getppid */
+/* wrapper function for getppid(2) */
 static int Sgetppid ( lua_State * const L )
 {
   lua_pushinteger ( L, getppid () ) ;
   return 1 ;
 }
 
-/* wrapper function for setuid */
+/* wrapper function for setuid(2) */
 static int Ssetuid ( lua_State * const L )
 {
   return res0( L, "setuid", setuid ( luaL_checkinteger ( L, 1 ) ) ) ;
