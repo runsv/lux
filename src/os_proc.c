@@ -994,22 +994,6 @@ static int u_fork ( lua_State * const L )
   return 1 ;
 }
 
-/* "non failing" version of fork(2), be careful ! */
-static int Ldo_fork ( lua_State * const L )
-{
-  pid_t p = 0 ;
-
-  (void) fflush ( NULL ) ;
-
-  while ( 0 > ( p = fork () ) && ENOSYS != errno ) {
-    /* sleep 5 seconds before fork()ing again */
-    do_sleep ( 5, 0 ) ;
-  }
-
-  lua_pushinteger ( L, p ) ;
-  return 1 ;
-}
-
 static int Lxfork ( lua_State * const L )
 {
   pid_t p = 0 ;
