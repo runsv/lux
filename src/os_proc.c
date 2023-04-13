@@ -206,7 +206,7 @@ static int Sgeteuid ( lua_State * const L )
 }
 
 /* wrapper function for getgid */
-static int Sgetgid ( lua_State * L )
+static int Sgetgid ( lua_State * const L )
 {
   lua_pushinteger ( L, getgid () ) ;
   return 1 ;

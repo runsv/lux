@@ -514,19 +514,6 @@ static char * chomp ( char * const str )
   return str ;
 }
 
-/* "failsafe" version of the fork(2) syscall */
-static pid_t xfork ( void )
-{
-  pid_t p = 0 ;
-
-  while ( 0 > ( p = fork () ) && ENOSYS != errno ) {
-    /* sleep a few seconds and try again */
-    do_sleep ( 5, 0 ) ;
-  }
-
-  return p ;
-}
-
 static int wait4pid ( const pid_t pid )
 {
   if ( 0 < pid && 0 == kill ( pid, 0 ) ) {
