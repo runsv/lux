@@ -14,6 +14,35 @@ enum {
 } ;
 
 /* helper function that checks a returned wait(pid)(2) status argument */
+static int check_exit_status ( lua_State * const L, const int wstatus )
+{
+  if ( WIFEXITED( wstatus ) ) {
+    (void) lua_pushstring ( L, "exited" ) ;
+    lua_pushinteger ( L, WEXITSTATUS( wstatus ) ) ;
+  } else if ( WIFSIGNALED( wstatus ) ) {
+#ifdef WCOREDUMP
+    if ( WCOREDUMP( wstatus ) ) {
+      (void) lua_pushstring ( L, "coredump" ) ;
+      lua_pushinteger ( L, WTERMSIG( wstatus ) ) ;
+      return 3 ;
+    }
+#endif
+    (void) lua_pushstring ( L, "signaled" ) ;
+    lua_pushinteger ( L, WTERMSIG( wstatus ) ) ;
+  } else if ( WIFSTOPPED( wstatus ) ) {
+    (void) lua_pushstring ( L, "stopped" ) ;
+    lua_pushinteger ( L, WSTOPSIG( wstatus ) ) ;
+  } else if ( WIFCONTINUED( wstatus ) ) {
+    (void) lua_pushstring ( L, "continued" ) ;
+    lua_pushinteger ( L, SIGCONT ) ;
+  } else {
+    (void) lua_pushstring ( L, "unknown" ) ;
+    lua_pushinteger ( L, wstatus ) ;
+  }
+
+  return 3 ;
+}
+
 static int Lget_exit_status ( lua_State * const L,
   const pid_t pid, const int s )
 {
@@ -1107,29 +1136,53 @@ static int Snanosleep ( lua_State * const L )
 }
 
 /* wrapper function for the wait(2) syscall */
-static int Swait ( lua_State * const L )
+static int u_wait ( lua_State * const L )
 {
-  int i ;
+  int w ;
   pid_t p ;
 
   do {
-    i = 0 ;
-    p = wait ( & i ) ;
-  } while ( 0 > p && EINTR == errno ) ;
+    w = 0 ;
+    p = wait ( & w ) ;
+  } while ( ( 0 > p ) && ( EINTR == errno ) ) ;
 
   if ( 0 > p ) {
-    i = errno ;
-    return luaL_error ( L, "wait() failed: %s (errno %d)",
-      strerror ( i ), i ) ;
+    const int e = errno ;
+    lua_pushnil ( L ) ;
+    (void) lua_pushfstring ( L, "wait() failed: %s (errno %d)",
+      strerror ( e ), e ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
   }
 
-  return Lget_exit_status ( L, p, i ) ;
+  lua_pushinteger ( L, p ) ;
+  return check_exit_status ( L, w ) ;
 }
 
 /* wrapper function for the waitpid(2) syscall */
-static int Swaitpid ( lua_State * const L )
+static int u_waitpid ( lua_State * const L )
 {
-  return Lwait4pid ( L, luaL_checkinteger ( L, 1 ), 0 ) ;
+  int w ;
+  pid_t p ;
+  const pid_t pid = luaL_checkinteger ( L, 1 ) ;
+  const int f = luaL_optinteger ( L, 2, 0 ) ;
+
+  do {
+    w = 0 ;
+    p = waitpid ( pid, & w, f ) ;
+  } while ( ( 0 > p ) && ( EINTR == errno ) ) ;
+
+  if ( 0 > p ) {
+    const int e = errno ;
+    lua_pushnil ( L ) ;
+    (void) lua_pushfstring ( L, "waitpid() failed: %s (errno %d)",
+      strerror ( e ), e ) ;
+    lua_pushinteger ( L, e ) ;
+    return 3 ;
+  }
+
+  lua_pushinteger ( L, p ) ;
+  return check_exit_status ( L, w ) ;
 }
 
 /* wait(pid)s for a child processes without blocking */
@@ -1356,6 +1409,7 @@ static int u_chroot ( lua_State * const L )
 }
 
 static int l_chroot ( lua_State * const L )
+{
   const char * const dir = luaL_checkstring ( L , 1 ) ;
 
   if ( dir && * dir ) {
