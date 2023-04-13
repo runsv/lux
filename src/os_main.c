@@ -910,6 +910,9 @@ static void add_const ( lua_State * const L )
   L_ADD_CONST( L, P_ALL )
   L_ADD_CONST( L, P_PID )
   L_ADD_CONST( L, P_PGID )
+  /*
+  L_ADD_CONST( L, P_PIDFD )
+  */
 
   /* constants used by clock_(g,s)ettime(2) et al */
 #if defined (_POSIX_TIMERS) && (0 < _POSIX_TIMERS)
@@ -1490,8 +1493,7 @@ static const luaL_Reg sys_func [ ] =
   { "nanosleep",		Snanosleep	},
   { "wait",			u_wait		},
   { "waitpid",			u_waitpid	},
-  { "waitid",			Swaitid		},
-  { "waitid_exited_nohang",	Lwaitid_exited_nohang	},
+  { "waitid",			u_waitid	},
   { "set_subreaper",		Lset_subreaper	},
   { "is_subreaper",		Lis_subreaper	},
   { "exit",			u_exit		},

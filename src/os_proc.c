@@ -18,26 +18,26 @@ static int get_exit_status ( lua_State * const L, const int wstatus )
 {
   /* check the wait status now */
   if ( WIFEXITED( wstatus ) ) {
-    (void) lua_pushstring ( L, "exited" ) ;
+    (void) lua_pushliteral ( L, "exited" ) ;
     lua_pushinteger ( L, WEXITSTATUS( wstatus ) ) ;
   } else if ( WIFSIGNALED( wstatus ) ) {
 #ifdef WCOREDUMP
     if ( WCOREDUMP( wstatus ) ) {
-      (void) lua_pushstring ( L, "coredump" ) ;
+      (void) lua_pushliteral ( L, "coredump" ) ;
       lua_pushinteger ( L, WTERMSIG( wstatus ) ) ;
       return 3 ;
     }
 #endif
-    (void) lua_pushstring ( L, "signaled" ) ;
+    (void) lua_pushliteral ( L, "signaled" ) ;
     lua_pushinteger ( L, WTERMSIG( wstatus ) ) ;
   } else if ( WIFSTOPPED( wstatus ) ) {
-    (void) lua_pushstring ( L, "stopped" ) ;
+    (void) lua_pushliteral ( L, "stopped" ) ;
     lua_pushinteger ( L, WSTOPSIG( wstatus ) ) ;
   } else if ( WIFCONTINUED( wstatus ) ) {
-    (void) lua_pushstring ( L, "continued" ) ;
+    (void) lua_pushliteral ( L, "continued" ) ;
     lua_pushinteger ( L, SIGCONT ) ;
   } else {
-    (void) lua_pushstring ( L, "unknown" ) ;
+    (void) lua_pushliteral ( L, "unknown" ) ;
     lua_pushinteger ( L, wstatus ) ;
   }
 
@@ -1119,98 +1119,54 @@ static int u_waitpid ( lua_State * const L )
 }
 
 /* wrapper for the waitid(2) syscall */
-static int Swaitid ( lua_State * const L )
+static int u_waitid ( lua_State * const L )
 {
-  int e = 0, i = 0, p = 0 ;
+  int e, i, f = WEXITED | WNOHANG ;
+  idtype_t type = P_ALL ;
+  id_t id = 0 ;
   siginfo_t si ;
   const int n = lua_gettop ( L ) ;
 
-  if ( 0 < n ) { i = luaL_checkinteger ( L, 1 ) ; }
-  if ( 1 < n ) { p = luaL_checkinteger ( L, 2 ) ; }
-  if ( 2 < n ) { e = luaL_checkinteger ( L, 3 ) ; }
+  if ( 0 < n ) { type = luaL_checkinteger ( L, 1 ) ; }
+  if ( 1 < n ) { id = luaL_checkinteger ( L, 2 ) ; }
+  if ( 2 < n ) { f = luaL_checkinteger ( L, 3 ) ; }
 
-  i = ( P_PID == i || P_PGID == i ) ? i : P_ALL ;
-  p = ( 0 < p ) ? p : 1 ;
-  e = e ? e : ( WEXITED | WNOHANG ) ;
-  si . si_pid = 0 ;
-  i = waitid ( i, p, & si, e ) ;
-  e = errno ;
-
-  if ( i ) {
-    lua_pushinteger ( L, i ) ;
-    lua_pushinteger ( L, e ) ;
-    return 2 ;
-  } else if ( 0 < si . si_pid ) {
-    lua_pushinteger ( L, si . si_pid ) ;
-    lua_pushinteger ( L, si . si_status ) ;
-
-    if ( CLD_EXITED == si . si_code ) {
-      (void) lua_pushliteral ( L, "exited" ) ;
-      return 3 ;
-    } else if ( CLD_KILLED == si . si_code ) {
-      (void) lua_pushliteral ( L, "signaled" ) ;
-      return 3 ;
-    } else if ( CLD_DUMPED == si . si_code ) {
-      (void) lua_pushliteral ( L, "coredump" ) ;
-      return 3 ;
-    } else if ( CLD_STOPPED == si . si_code ) {
-      (void) lua_pushliteral ( L, "stopped" ) ;
-      return 3 ;
-    } else if ( CLD_CONTINUED == si . si_code ) {
-      (void) lua_pushliteral ( L, "continued" ) ;
-      return 3 ;
-    } else if ( CLD_TRAPPED == si . si_code ) {
-      (void) lua_pushliteral ( L, "trapped" ) ;
-      return 3 ;
-    }
-
-    return 2 ;
-  }
-
-  return 0 ;
-}
-
-/* waitid() for all our terminated child processes */
-static int Lwaitid_exited_nohang ( lua_State * const L )
-{
-  int i = -3, e = 0 ;
-  siginfo_t si ;
+  (void) memset ( & si, 0, sizeof ( siginfo_t ) ) ;
 
   do {
     si . si_pid = 0 ;
-    i = waitid ( P_ALL, 0, & si, WEXITED | WNOHANG ) ;
+    i = waitid ( type, id, & si, f ) ;
     e = errno ;
-  } while ( i && ( EINTR == e ) ) ;
+  } while ( ( 0 > i ) && ( EINTR == e ) ) ;
 
-  if ( i ) {
-    lua_pushinteger ( L, i ) ;
+  if ( 0 > i ) {
+    lua_pushnil ( L ) ;
+    (void) lua_pushstring ( L, strerror ( e ) ) ;
     lua_pushinteger ( L, e ) ;
-    return 2 ;
-  } else if ( 0 < si . si_pid ) {
+    return 3 ;
+  }
+
+  if ( 0 == i && 0 < si . si_pid ) {
     lua_pushinteger ( L, si . si_pid ) ;
-    lua_pushinteger ( L, si . si_status ) ;
 
     if ( CLD_EXITED == si . si_code ) {
       (void) lua_pushliteral ( L, "exited" ) ;
-      return 3 ;
     } else if ( CLD_KILLED == si . si_code ) {
       (void) lua_pushliteral ( L, "signaled" ) ;
-      return 3 ;
     } else if ( CLD_DUMPED == si . si_code ) {
       (void) lua_pushliteral ( L, "coredump" ) ;
-      return 3 ;
     } else if ( CLD_STOPPED == si . si_code ) {
       (void) lua_pushliteral ( L, "stopped" ) ;
-      return 3 ;
     } else if ( CLD_CONTINUED == si . si_code ) {
       (void) lua_pushliteral ( L, "continued" ) ;
-      return 3 ;
     } else if ( CLD_TRAPPED == si . si_code ) {
       (void) lua_pushliteral ( L, "trapped" ) ;
-      return 3 ;
+    } else {
+      (void) lua_pushliteral ( L, "unknown" ) ;
     }
 
-    return 2 ;
+    lua_pushinteger ( L, si . si_status ) ;
+    return 3 ;
   }
 
   return 0 ;
