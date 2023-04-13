@@ -1501,7 +1501,6 @@ static const luaL_Reg sys_func [ ] =
   { "_exit",			u__exit		},
   { "pause",			Spause		},
   { "fork",			u_fork		},
-  { "xfork",			Lxfork		},
   { "chroot",			Schroot		},
   { "chdir",			u_chdir		},
   { "getcwd",			u_getcwd	},

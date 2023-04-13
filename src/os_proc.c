@@ -994,24 +994,6 @@ static int u_fork ( lua_State * const L )
   return 1 ;
 }
 
-static int Lxfork ( lua_State * const L )
-{
-  pid_t p = 0 ;
-
-  (void) fflush ( NULL ) ;
-  p = xfork () ;
-
-  if ( 0 > p ) {
-    const int i = errno ;
-    lua_pushinteger ( L, -1 ) ;
-    lua_pushinteger ( L, i ) ;
-    return 2 ;
-  }
-
-  lua_pushinteger ( L, p ) ;
-  return 1 ;
-}
-
 /* wrapper function for the umask(2) syscall */
 static int u_umask ( lua_State * const L )
 {
