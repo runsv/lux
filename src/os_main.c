@@ -1503,6 +1503,7 @@ static const luaL_Reg sys_func [ ] =
   { "do_pause",			l_pause		},
   { "fork",			u_fork		},
   { "chroot",			u_chroot	},
+  { "chdir_and_chroot",		l_chroot	},
   { "chdir",			u_chdir		},
   { "getcwd",			u_getcwd	},
   { "fchdir",			Sfchdir		},

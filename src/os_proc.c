@@ -1349,6 +1349,16 @@ static int u_chroot ( lua_State * const L )
   const char * const dir = luaL_checkstring ( L , 1 ) ;
 
   if ( dir && * dir ) {
+    return res_bool_zero ( L, chroot ( dir ) ) ;
+  }
+
+  return luaL_argerror ( L, 1, "accessible dir path required" ) ;
+}
+
+static int l_chroot ( lua_State * const L )
+  const char * const dir = luaL_checkstring ( L , 1 ) ;
+
+  if ( dir && * dir ) {
     if ( chdir ( dir ) ) { return rep_err ( L, "chdir", errno ) ; }
 
     return res0( L, "chroot", chroot ( dir ) ) ;
