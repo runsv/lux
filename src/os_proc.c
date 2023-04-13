@@ -780,19 +780,10 @@ static int Sraise ( lua_State * const L )
   return 0 ;
 }
 
-/* wrapper for the pause syscall */
-static int Spause ( lua_State * const L )
+/* wrapper for the pause(2) syscall */
+static int u_pause ( lua_State * const L )
 {
-  /* the return value of pause() is always the same and not relevant
-  int e = 0, i = -3 ;
-
-  i = pause () ;
-  e = errno ;
-  lua_pushinteger ( L, i ) ;
-  lua_pushinteger ( L, e ) ;
-
-  return 2 ;
-  */
+  /* the return value of pause() is always the same and not relevant */
   (void) pause () ;
   return 0 ;
 }
@@ -1343,7 +1334,7 @@ static int Sfchdir ( lua_State * const L )
 }
 
 /* wrapper function for the chroot(2) syscall */
-static int Schroot ( lua_State * const L )
+static int u_chroot ( lua_State * const L )
 {
   const char * const dir = luaL_checkstring ( L , 1 ) ;
 
