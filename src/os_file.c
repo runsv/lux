@@ -987,143 +987,145 @@ static int Ltest_path ( lua_State * const L )
 }
 
 /*
- * wrappers to the stat family of syscalls
+ * wrappers for the stat(2) family of syscalls
  */
 
-/* helper function that does the actual calls to (f,l)stat ... */
-static int do_stat ( lua_State * const L,
-  const char what, const int fd, const char * path )
+static int get_stat_res ( lua_State * const L, struct stat * sp )
 {
-  int i = 0 ;
-  struct stat st ;
-
-  switch ( what ) {
-    case 2 :
-    case 'L' :
-    case 'l' :
-      i = lstat ( path, & st ) ;
-      break ;
-    case 3 :
-    case 'F' :
-    case 'f' :
-      i = fstat ( fd, & st ) ;
-      break ;
-    case 1 :
-    case 'S' :
-    case 's' :
-    default :
-      i = stat ( path, & st ) ;
-      break ;
-  }
-
-  if ( i ) {
-    i = errno ;
-    lua_pushnil ( L  ) ;
-    lua_pushinteger ( L, i ) ;
-    return 2 ;
-  }
-
   /* table to hold the fields of the returned stat structure */
   lua_newtable ( L ) ;
 
   (void) lua_pushliteral ( L, "ino" ) ;
-  lua_pushinteger ( L, st . st_ino ) ;
+  lua_pushinteger ( L, sp -> st_ino ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "uid" ) ;
-  lua_pushinteger ( L, st . st_uid ) ;
+  lua_pushinteger ( L, sp -> st_uid ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "gid" ) ;
-  lua_pushinteger ( L, st . st_gid ) ;
+  lua_pushinteger ( L, sp -> st_gid ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "mode" ) ;
-  lua_pushinteger ( L, st . st_mode ) ;
+  lua_pushinteger ( L, sp -> st_mode ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "size" ) ;
-  lua_pushinteger ( L, st . st_size ) ;
+  lua_pushinteger ( L, sp -> st_size ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "nlink" ) ;
-  lua_pushinteger ( L, st . st_nlink ) ;
+  lua_pushinteger ( L, sp -> st_nlink ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "atime" ) ;
-  lua_pushinteger ( L, st . st_atime ) ;
+  lua_pushinteger ( L, sp -> st_atime ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "ctime" ) ;
-  lua_pushinteger ( L, st . st_ctime ) ;
+  lua_pushinteger ( L, sp -> st_ctime ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "mtime" ) ;
-  lua_pushinteger ( L, st . st_mtime ) ;
+  lua_pushinteger ( L, sp -> st_mtime ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "atimensec" ) ;
-  lua_pushinteger ( L, st . st_atim . tv_nsec ) ;
+  lua_pushinteger ( L, sp -> st_atim . tv_nsec ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "ctimensec" ) ;
-  lua_pushinteger ( L, st . st_ctim . tv_nsec ) ;
+  lua_pushinteger ( L, sp -> st_ctim . tv_nsec ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "mtimensec" ) ;
-  lua_pushinteger ( L, st . st_mtim . tv_nsec ) ;
+  lua_pushinteger ( L, sp -> st_mtim . tv_nsec ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "blksize" ) ;
-  lua_pushinteger ( L, st . st_blksize ) ;
+  lua_pushinteger ( L, sp -> st_blksize ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "blocks" ) ;
-  lua_pushinteger ( L, st . st_blocks ) ;
+  lua_pushinteger ( L, sp -> st_blocks ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "dev" ) ;
-  lua_pushinteger ( L, st . st_dev ) ;
+  lua_pushinteger ( L, sp -> st_dev ) ;
   lua_rawset ( L, -3 ) ;
 
   (void) lua_pushliteral ( L, "rdev" ) ;
-  lua_pushinteger ( L, st . st_rdev ) ;
+  lua_pushinteger ( L, sp -> st_rdev ) ;
   lua_rawset ( L, -3 ) ;
 
   return 1 ;
 }
 
-/* wrapper to the stat syscall */
-static int Sstat ( lua_State * const L )
+/* wrapper for the stat() syscall */
+static int u_stat ( lua_State * const L )
 {
-  const char * path = luaL_checkstring ( L, 1 ) ;
+  const char * const path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {
-    return do_stat ( L, 'S', 0, path ) ;
+    struct stat st ;
+    int i = stat ( path, & st ) ;
+
+    if ( i ) {
+      i = errno ;
+      lua_pushnil ( L ) ;
+      (void) lua_pushstring ( L, strerror ( i ) ) ;
+      lua_pushinteger ( L, i ) ;
+      return 3 ;
+    }
+
+    return get_stat_res ( L, & st ) ;
   }
 
-  return luaL_argerror ( L, 1, "non empty string expected" ) ;
+  return luaL_argerror ( L, 1, "pathname expected" ) ;
 }
 
-/* wrapper to the lstat syscall */
-static int Slstat ( lua_State * const L )
+/* wrapper for the lstat() syscall */
+static int u_lstat ( lua_State * const L )
 {
-  const char * path = luaL_checkstring ( L, 1 ) ;
+  const char * const path = luaL_checkstring ( L, 1 ) ;
 
   if ( path && * path ) {
-    return do_stat ( L, 'L', 0, path ) ;
+    struct stat st ;
+    int i = lstat ( path, & st ) ;
+
+    if ( i ) {
+      i = errno ;
+      lua_pushnil ( L ) ;
+      (void) lua_pushstring ( L, strerror ( i ) ) ;
+      lua_pushinteger ( L, i ) ;
+      return 3 ;
+    }
+
+    return get_stat_res ( L, & st ) ;
   }
 
-  return luaL_argerror ( L, 1, "non empty string expected" ) ;
+  return luaL_argerror ( L, 1, "pathname expected" ) ;
 }
 
-/* wrapper to the fstat syscall */
-static int Sfstat ( lua_State * const L )
+/* wrapper for the fstat() syscall */
+static int u_fstat ( lua_State * const L )
 {
   const int fd = luaL_checkinteger ( L, 1 ) ;
 
   if ( 0 <= fd ) {
-    return do_stat ( L, 'F', fd, NULL ) ;
+    struct stat st ;
+    int i = fstat ( fd, & st ) ;
+
+    if ( i ) {
+      i = errno ;
+      lua_pushnil ( L ) ;
+      (void) lua_pushstring ( L, strerror ( i ) ) ;
+      lua_pushinteger ( L, i ) ;
+      return 3 ;
+    }
+
+    return get_stat_res ( L, & st ) ;
   }
 
   return luaL_argerror ( L, 1, "invalid fd" ) ;

@@ -898,6 +898,7 @@ static void add_const ( lua_State * const L )
   L_ADD_CONST( L, AT_REMOVEDIR )
   L_ADD_CONST( L, AT_SYMLINK_FOLLOW )
   L_ADD_CONST( L, AT_SYMLINK_NOFOLLOW )
+  L_ADD_CONST( L, AT_NO_AUTOMOUNT )
 #endif
 
   /* constants used by wait(p)id */
@@ -1669,9 +1670,9 @@ static const luaL_Reg sys_func [ ] =
   { "create_file",		l_create_file	},
   { "touch",			l_touch		},
   { "create",			l_create	},
-  { "stat",			Sstat		},
-  { "lstat",			Slstat		},
-  { "fstat",			Sfstat		},
+  { "stat",			u_stat		},
+  { "lstat",			u_lstat		},
+  { "fstat",			u_fstat		},
   { "S_ISBLK",			mode_is_blk	},
   { "S_ISCHR",			mode_is_chr	},
   { "S_ISDIR",			mode_is_dir	},

@@ -215,4 +215,29 @@ static int u_utimensat ( lua_State * const L )
   return luaL_argerror ( L, 1, "filename required" ) ;
 }
 
+/* wrapper function for the fstatat(2) syscall */
+static int u_fstatat ( lua_State * const L )
+{
+  const int dirfd = luaL_checkinteger ( L, 1 ) ;
+  const char * const path = luaL_checkstring ( L, 2 ) ;
+  int f = luaL_optinteger ( L, 3, 0 ) ;
+
+  if ( path && * path ) {
+    struct stat st ;
+    int i = fstatat ( dirfd, path, & st, f ) ;
+
+    if ( i ) {
+      i = errno ;
+      lua_pushnil ( L ) ;
+      (void) lua_pushstring ( L, strerror ( i ) ) ;
+      lua_pushinteger ( L, i ) ;
+      return 3 ;
+    }
+
+    return get_stat_res ( L, & st ) ;
+  }
+
+  return luaL_error ( L, "pathname expected" ) ;
+}
+
 #endif
