@@ -222,7 +222,7 @@ static int u_fstatat ( lua_State * const L )
   const char * const path = luaL_checkstring ( L, 2 ) ;
   int f = luaL_optinteger ( L, 3, 0 ) ;
 
-  if ( path && * path ) {
+  if ( path ) {
     struct stat st ;
     int i = fstatat ( dirfd, path, & st, f ) ;
 
