@@ -229,7 +229,8 @@ static int u_fstatat ( lua_State * const L )
     if ( i ) {
       i = errno ;
       lua_pushnil ( L ) ;
-      (void) lua_pushstring ( L, strerror ( i ) ) ;
+      (void) lua_pushfstring ( L,
+        "fstatat() failed: %s (errno %d)", strerror ( i ), i ) ;
       lua_pushinteger ( L, i ) ;
       return 3 ;
     }

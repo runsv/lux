@@ -1074,7 +1074,8 @@ static int u_stat ( lua_State * const L )
     if ( i ) {
       i = errno ;
       lua_pushnil ( L ) ;
-      (void) lua_pushstring ( L, strerror ( i ) ) ;
+      (void) lua_pushfstring ( L,
+        "stat() failed: %s (errno %d)", strerror ( i ), i ) ;
       lua_pushinteger ( L, i ) ;
       return 3 ;
     }
@@ -1097,7 +1098,8 @@ static int u_lstat ( lua_State * const L )
     if ( i ) {
       i = errno ;
       lua_pushnil ( L ) ;
-      (void) lua_pushstring ( L, strerror ( i ) ) ;
+      (void) lua_pushfstring ( L,
+        "lstat() failed: %s (errno %d)", strerror ( i ), i ) ;
       lua_pushinteger ( L, i ) ;
       return 3 ;
     }
@@ -1120,7 +1122,8 @@ static int u_fstat ( lua_State * const L )
     if ( i ) {
       i = errno ;
       lua_pushnil ( L ) ;
-      (void) lua_pushstring ( L, strerror ( i ) ) ;
+      (void) lua_pushfstring ( L,
+        "fstat() failed: %s (errno %d)", strerror ( i ), i ) ;
       lua_pushinteger ( L, i ) ;
       return 3 ;
     }

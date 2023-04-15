@@ -1775,6 +1775,7 @@ static const luaL_Reg sys_func [ ] =
   { "fchmodat",			u_fchmodat	},
   { "fchownat",			u_fchownat	},
   { "utimensat",		u_utimensat	},
+  { "fstatat",			u_fstatat	},
   /* end of imported functions from "os_at.c" */
 #endif
 
