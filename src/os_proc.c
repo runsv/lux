@@ -745,17 +745,7 @@ static int u_pause ( lua_State * const L )
   return 0 ;
 }
 
-static int l_pause ( lua_State * const L )
-{
-  while ( 1 ) {
-    /* the return value of pause() is always the same and not relevant */
-    (void) pause () ;
-  }
-
-  return 0 ;
-}
-
-/* wrapper function for the getpgrp syscall
+/* wrapper function for the getpgrp() syscall
  * (POSIX.1 version without args that always succeeds
  * and returns the PGID of the calling process)
  */
@@ -765,7 +755,7 @@ static int Sgetpgrp ( lua_State * const L )
   return 1 ;
 }
 
-/* wrapper function for the getpgid syscall */
+/* wrapper function for the getpgid() syscall */
 static int Sgetpgid ( lua_State * const L )
 {
   int e = 0 ;
@@ -1274,7 +1264,7 @@ static int u_chdir ( lua_State * const L )
 }
 
 /* wrapper function for the fchdir(2) syscall */
-static int Sfchdir ( lua_State * const L )
+static int u_fchdir ( lua_State * const L )
 {
   return res0( L, "fchdir", fchdir ( (int) luaL_checkinteger ( L, 1 ) ) ) ;
 }
@@ -1286,19 +1276,6 @@ static int u_chroot ( lua_State * const L )
 
   if ( dir && * dir ) {
     return res_bool_zero ( L, chroot ( dir ) ) ;
-  }
-
-  return luaL_argerror ( L, 1, "accessible dir path required" ) ;
-}
-
-static int l_chroot ( lua_State * const L )
-{
-  const char * const dir = luaL_checkstring ( L , 1 ) ;
-
-  if ( dir && * dir ) {
-    if ( chdir ( dir ) ) { return rep_err ( L, "chdir", errno ) ; }
-
-    return res0( L, "chroot", chroot ( dir ) ) ;
   }
 
   return luaL_argerror ( L, 1, "accessible dir path required" ) ;
