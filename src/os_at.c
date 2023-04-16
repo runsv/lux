@@ -224,15 +224,9 @@ static int u_fstatat ( lua_State * const L )
 
   if ( path ) {
     struct stat st ;
-    int i = fstatat ( dirfd, path, & st, f ) ;
 
-    if ( i ) {
-      i = errno ;
-      lua_pushnil ( L ) ;
-      (void) lua_pushfstring ( L,
-        "fstatat() failed: %s (errno %d)", strerror ( i ), i ) ;
-      lua_pushinteger ( L, i ) ;
-      return 3 ;
+    if ( fstatat ( dirfd, path, & st, f ) ) {
+      return res_nil ( L ) ;
     }
 
     return get_stat_res ( L, & st ) ;

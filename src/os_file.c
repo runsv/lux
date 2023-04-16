@@ -1069,15 +1069,9 @@ static int u_stat ( lua_State * const L )
 
   if ( path && * path ) {
     struct stat st ;
-    int i = stat ( path, & st ) ;
 
-    if ( i ) {
-      i = errno ;
-      lua_pushnil ( L ) ;
-      (void) lua_pushfstring ( L,
-        "stat() failed: %s (errno %d)", strerror ( i ), i ) ;
-      lua_pushinteger ( L, i ) ;
-      return 3 ;
+    if ( stat ( path, & st ) ) {
+      return res_nil ( L ) ;
     }
 
     return get_stat_res ( L, & st ) ;
@@ -1093,15 +1087,9 @@ static int u_lstat ( lua_State * const L )
 
   if ( path && * path ) {
     struct stat st ;
-    int i = lstat ( path, & st ) ;
 
-    if ( i ) {
-      i = errno ;
-      lua_pushnil ( L ) ;
-      (void) lua_pushfstring ( L,
-        "lstat() failed: %s (errno %d)", strerror ( i ), i ) ;
-      lua_pushinteger ( L, i ) ;
-      return 3 ;
+    if ( lstat ( path, & st ) ) {
+      return res_nil ( L ) ;
     }
 
     return get_stat_res ( L, & st ) ;
@@ -1117,15 +1105,9 @@ static int u_fstat ( lua_State * const L )
 
   if ( 0 <= fd ) {
     struct stat st ;
-    int i = fstat ( fd, & st ) ;
 
-    if ( i ) {
-      i = errno ;
-      lua_pushnil ( L ) ;
-      (void) lua_pushfstring ( L,
-        "fstat() failed: %s (errno %d)", strerror ( i ), i ) ;
-      lua_pushinteger ( L, i ) ;
-      return 3 ;
+    if ( fstat ( fd, & st ) ) {
+      return res_nil ( L ) ;
     }
 
     return get_stat_res ( L, & st ) ;
