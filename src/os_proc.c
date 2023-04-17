@@ -97,23 +97,33 @@ static int Lvfork_exec ( lua_State * const L, const unsigned long int f )
     }
 
     if ( EXEC_VFORK & f ) {
-      pid_t p ;
+      pid_t pid ;
 
       (void) fflush ( NULL ) ;
-      p = vfork () ;
+      pid = vfork () ;
 
-      if ( 0 > p ) {
+      if ( 0 > pid ) {
         /* vfork(2) failed */
-        i = errno ;
-        return luaL_error ( L, "vfork() failed: %s (errno %d)",
-          strerror ( i ), i ) ;
-      } else if ( 0 < p ) {
+        return res_nil ( L ) ;
+      } else if ( 0 < pid ) {
         /* parent process */
         if ( EXEC_WAITPID & f ) {
-          return Lwait4pid ( L, p, 0 ) ;
+	  int w = 0 ;
+          pid_t p ;
+
+          do {
+            p = waitpid ( pid, & w, 0 ) ;
+            if ( p == pid ) { break ; }
+          } while ( ( 0 > p ) && ( EINTR == errno ) ) ;
+
+          if ( 0 < p && p == pid ) {
+            return get_exit_status ( L, w ) ;
+          } else if ( 0 > p ) {
+            return res_nil ( L ) ;
+          }
         }
 
-        lua_pushinteger ( L, p ) ;
+        lua_pushinteger ( L, pid ) ;
         return 1 ;
       }
     }
@@ -139,9 +149,26 @@ static int Lvfork_exec ( lua_State * const L, const unsigned long int f )
        */
       _exit ( 127 ) ;
     } else {
-      i = errno ;
-      return luaL_error ( L, "execve() failed: %s (errno %d)",
-        strerror ( i ), i ) ;
+      return res_nil ( L ) ;
+    }
+  }
+
+  return luaL_error ( L, "string args required" ) ;
+}
+
+static int u_execl ( lua_State * const L )
+{
+  const int n = lua_gettop ( L ) ;
+
+  if ( 0 < n ) {
+    const char * const path = luaL_checkstring ( L, 1 ) ;
+
+    if ( path && * path ) {
+      if ( 1 == n ) {
+        char * av [ 2 ] = { (char *) NULL } ;
+        av [ 0 ] = path ;
+        (void) execv ( path, av ) ;
+      }
     }
   }
 
@@ -1241,10 +1268,12 @@ static int u_getcwd ( lua_State * const L )
 
   /* dir path length exceeds buffer size */
   /*
-  if ( NULL == cwd && ERANGE == e ) {
+  if ( ( NULL == cwd ) && ( ERANGE == errno ) ) {
     luaL_Buffer b ;
-    luaL_buffinitsize ( L, & b, 1 + 2 * PATH_MAX ) ;
+    char * p = luaL_buffinitsize ( L, & b, 1 + 2 * PATH_MAX ) ;
+    cwd = getcwd ( p, 2 * PATH_MAX ) ;
     luaL_pushresultsize ( & b, 1 + 2 * PATH_MAX ) ;
+    return 1 ;
   }
   */
 
