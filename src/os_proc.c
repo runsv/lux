@@ -157,20 +157,69 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
   return luaL_error ( L, "string args required" ) ;
 }
 
-static int u_execv ( lua_State * const L )
+static int do_execl ( lua_State * const L, const unsigned long int f )
 {
   const int n = lua_gettop ( L ) ;
 
   if ( 0 < n ) {
-    const char * const path = luaL_checkstring ( L, 1 ) ;
+    int i ;
+    const char * str = NULL ;
+    char ** av = NULL ;
+    char * argv [ 1 + NARG ] = { (char *) NULL } ;
 
-    if ( path && * path ) {
-      if ( 1 == n ) {
-        char * av [ 2 ] = { (char *) NULL } ;
-        av [ 0 ] = path ;
-        (void) execv ( path, av ) ;
+    if ( 0 < n && NARG >= n ) {
+      for ( i = 0 ; n > i ; ++ i ) {
+        str = luaL_checkstring ( L, 1 + i ) ;
+
+        if ( str && * str ) {
+          argv [ i ] = (char *) str ;
+        } else if ( str ) {
+          argv [ i ] = "" ;
+        } else {
+          return luaL_argerror ( L, i, "invalid string" ) ;
+        }
       }
+
+      argv [ i ] = (char *) NULL ;
+      av = argv ;
+    } else if ( NARG < n ) {
+      av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
+
+      if ( NULL == av ) {
+        lua_pushboolean ( L, 0 ) ;
+        return 1 ;
+      }
+
+      for ( i = 0 ; n > i ; ++ i ) {
+        str = luaL_checkstring ( L, 1 + i ) ;
+
+        if ( str && * str ) {
+          av [ i ] = (char *) str ;
+        } else if ( str ) {
+          av [ i ] = "" ;
+        } else {
+          return luaL_argerror ( L, i, "invalid string" ) ;
+        }
+      }
+
+      av [ i ] = (char *) NULL ;
     }
+
+    /* restore default signal handling behaviour and unblock all signals ? */
+    if ( EXEC_DEFSIG & f ) { reset_sigs () ; }
+
+    /* run the requested execv*() syscall now */
+    if ( ( EXEC_PATH & f ) && ( EXEC_ARGV0 & f ) ) {
+      (void) execvp ( * av, 1 + av ) ;
+    } else if ( EXEC_ARGV0 & f ) {
+      (void) execv ( * av, 1 + av ) ;
+    } else if ( EXEC_PATH & f ) {
+      (void) execvp ( * av, av ) ;
+    } else {
+      (void) execv ( * av, av ) ;
+    }
+
+    return res_nil ( L ) ;
   }
 
   return luaL_error ( L, "string args required" ) ;
