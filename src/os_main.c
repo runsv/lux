@@ -1506,7 +1506,7 @@ static const luaL_Reg sys_func [ ] =
   { "chdir",			u_chdir		},
   { "getcwd",			u_getcwd	},
   { "fchdir",			u_fchdir	},
-  { "daemon",			Sdaemon		},
+  { "daemon",			u_daemon	},
   { "execl",			Lexecl		},
   { "execlp",			Lexeclp		},
   { "defsig_execl",		Ldefsig_execl	},
