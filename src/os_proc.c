@@ -7,10 +7,11 @@
 
 enum {
   EXEC_ARGV0			= 0x0001,
-  EXEC_PATH			= 0x0002,
-  EXEC_DEFSIG			= 0x0004,
+  EXEC_ENV			= 0x0002,
+  EXEC_PATH			= 0x0004,
   EXEC_VFORK			= 0x0008,
   EXEC_WAITPID			= 0x0010,
+  EXEC_DEFSIG			= 0x0020,
 } ;
 
 /* helper function that checks a returned wait(pid)(2) status argument */
@@ -77,7 +78,7 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
       argv [ i ] = (char *) NULL ;
       av = argv ;
     } else if ( NARG < n ) {
-      av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof (char *), 1 ) ;
+      av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
 
       if ( NULL == av ) {
         lua_pushboolean ( L, 0 ) ;
@@ -204,9 +205,6 @@ static int do_execl ( lua_State * const L, const unsigned long int f )
 
       av [ i ] = (char *) NULL ;
     }
-
-    /* restore default signal handling behaviour and unblock all signals ? */
-    if ( EXEC_DEFSIG & f ) { reset_sigs () ; }
 
     /* run the requested execv*() syscall now */
     if ( ( EXEC_PATH & f ) && ( EXEC_ARGV0 & f ) ) {
