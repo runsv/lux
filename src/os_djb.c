@@ -1,0 +1,4 @@
+/*
+ * djb style functions
+ */
+
