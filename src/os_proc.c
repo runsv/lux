@@ -217,11 +217,99 @@ static int do_execl ( lua_State * const L, const unsigned long int f )
       (void) execv ( * av, av ) ;
     }
 
-    return res_nil ( L ) ;
+    return res_false ( L ) ;
   }
 
   return luaL_error ( L, "string args required" ) ;
 }
+
+#if 0
+static int do_execv ( lua_State * const L, const unsigned long int f )
+{
+  int n = lua_gettop ( L ) ;
+  const char * path = NULL ;
+
+  if ( 1 > n ) {
+    return luaL_error ( L, "pathname required" ) ;
+  }
+
+  if ( 0 < n ) {
+    path = luaL_checkstring ( L, 1 ) ;
+  }
+
+  if ( 1 < n ) {
+    luaL_checktype ( L, 2, LUA_TTABLE ) ;
+  }
+
+  if ( 2 < n ) {
+    luaL_checktype ( L, 3, LUA_TTABLE ) ;
+  }
+
+  if ( 2 > lua_gettop ( L ) ) {
+    return luaL_error ( L, "2 args required" ) ;
+  }
+
+  if ( 0 < n ) {
+    int i ;
+    const char * str = NULL ;
+    char ** av = NULL ;
+    char * argv [ 1 + NARG ] = { (char *) NULL } ;
+
+    if ( 0 < n && NARG >= n ) {
+      for ( i = 0 ; n > i ; ++ i ) {
+        str = luaL_checkstring ( L, 1 + i ) ;
+
+        if ( str && * str ) {
+          argv [ i ] = (char *) str ;
+        } else if ( str ) {
+          argv [ i ] = "" ;
+        } else {
+          return luaL_argerror ( L, i, "invalid string" ) ;
+        }
+      }
+
+      argv [ i ] = (char *) NULL ;
+      av = argv ;
+    } else if ( NARG < n ) {
+      av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
+
+      if ( NULL == av ) {
+        lua_pushboolean ( L, 0 ) ;
+        return 1 ;
+      }
+
+      for ( i = 0 ; n > i ; ++ i ) {
+        str = luaL_checkstring ( L, 1 + i ) ;
+
+        if ( str && * str ) {
+          av [ i ] = (char *) str ;
+        } else if ( str ) {
+          av [ i ] = "" ;
+        } else {
+          return luaL_argerror ( L, i, "invalid string" ) ;
+        }
+      }
+
+      av [ i ] = (char *) NULL ;
+    }
+
+    /* run the requested execv*() syscall now */
+    if ( ( EXEC_PATH & f ) && ( EXEC_ARGV0 & f ) ) {
+      (void) execvp ( * av, 1 + av ) ;
+    } else if ( EXEC_ARGV0 & f ) {
+      (void) execv ( * av, 1 + av ) ;
+    } else if ( EXEC_PATH & f ) {
+      (void) execvp ( * av, av ) ;
+    } else {
+      (void) execv ( * av, av ) ;
+    }
+
+    return res_false ( L ) ;
+  }
+
+  return luaL_error ( L, "string args required" ) ;
+}
+#endif
 
 /* wrapper function for getuid(2) */
 static int Sgetuid ( lua_State * const L )
@@ -2144,6 +2232,50 @@ static int Lvfork_execp0_wait ( lua_State * const L )
 {
   if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
     return vfork_exec ( L, EXEC_ARGV0 | EXEC_PATH | EXEC_VFORK | EXEC_WAITPID ) ;
+  }
+
+  return luaL_error ( L, "string args required" ) ;
+}
+
+/*
+ * functions that call do_execl()
+ */
+
+static int l_execl ( lua_State * const L )
+{
+  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
+    return do_execl ( L, 0 ) ;
+  }
+
+  return luaL_error ( L, "string args required" ) ;
+}
+
+static int l_execl0 ( lua_State * const L )
+{
+  if ( ( 1 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) &&
+    lua_isstring ( L, 2 ) )
+  {
+    return do_execl ( L, EXEC_ARGV0 ) ;
+  }
+
+  return luaL_error ( L, "string args required" ) ;
+}
+
+static int l_execlp ( lua_State * const L )
+{
+  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
+    return do_execl ( L, EXEC_PATH ) ;
+  }
+
+  return luaL_error ( L, "string args required" ) ;
+}
+
+static int l_execlp0 ( lua_State * const L )
+{
+  if ( ( 1 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) &&
+    lua_isstring ( L, 2 ) )
+  {
+    return do_execl ( L, EXEC_ARGV0 | EXEC_PATH ) ;
   }
 
   return luaL_error ( L, "string args required" ) ;
