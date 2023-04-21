@@ -2341,6 +2341,16 @@ static int l_execvp0 ( lua_State * const L )
   return do_execv ( L, EXEC_ARGV0 | EXEC_PATH ) ;
 }
 
+static int l_execve ( lua_State * const L )
+{
+  return do_execv ( L, EXEC_ENV ) ;
+}
+
+static int l_execve0 ( lua_State * const L )
+{
+  return do_execv ( L, EXEC_ARGV0 | EXEC_ENV ) ;
+}
+
 /*
  * end of execv wrapper functions
  */
