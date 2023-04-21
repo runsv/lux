@@ -3,7 +3,7 @@
  */
 
 /* constants */
-#define NARG		100
+#define NARG		200
 
 enum {
   EXEC_ARGV0			= 0x0001,
@@ -54,8 +54,8 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
     int i ;
     pid_t pid = 1 ;
     const char * str = NULL ;
-    char ** av = NULL ;
     char * argv [ 1 + NARG ] = { (char *) NULL } ;
+    char ** av = argv ;
 
     /* check if all given args are strings before anything else */
     /*
@@ -71,7 +71,7 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
         } else if ( str ) {
           argv [ i ] = "" ;
         } else {
-          return luaL_argerror ( L, i, "invalid string" ) ;
+          return luaL_argerror ( L, 1 + i, "invalid string" ) ;
         }
       }
 
@@ -93,7 +93,7 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
         } else if ( str ) {
           av [ i ] = "" ;
         } else {
-          return luaL_argerror ( L, i, "invalid string" ) ;
+          return luaL_argerror ( L, 1 + i, "invalid string" ) ;
         }
       }
 
@@ -110,7 +110,7 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
       } else if ( 0 < pid ) {
         /* parent process */
         if ( EXEC_WAITPID & f ) {
-	  int w = 0 ;
+          int w = 0 ;
           pid_t p ;
 
           do {
@@ -165,8 +165,8 @@ static int do_execl ( lua_State * const L, const unsigned long int f )
   if ( 0 < n ) {
     int i ;
     const char * str = NULL ;
-    char ** av = NULL ;
     char * argv [ 1 + NARG ] = { (char *) NULL } ;
+    char ** av = argv ;
 
     if ( 0 < n && NARG >= n ) {
       for ( i = 0 ; n > i ; ++ i ) {
@@ -177,7 +177,7 @@ static int do_execl ( lua_State * const L, const unsigned long int f )
         } else if ( str ) {
           argv [ i ] = "" ;
         } else {
-          return luaL_argerror ( L, i, "invalid string" ) ;
+          return luaL_argerror ( L, 1 + i, "invalid string" ) ;
         }
       }
 
@@ -199,7 +199,7 @@ static int do_execl ( lua_State * const L, const unsigned long int f )
         } else if ( str ) {
           av [ i ] = "" ;
         } else {
-          return luaL_argerror ( L, i, "invalid string" ) ;
+          return luaL_argerror ( L, 1 + i, "invalid string" ) ;
         }
       }
 
@@ -223,93 +223,129 @@ static int do_execl ( lua_State * const L, const unsigned long int f )
   return luaL_error ( L, "string args required" ) ;
 }
 
-#if 0
 static int do_execv ( lua_State * const L, const unsigned long int f )
 {
-  int n = lua_gettop ( L ) ;
-  const char * path = NULL ;
+  int i, n = lua_gettop ( L ) ;
+  const char * str = NULL ;
+  char * env [ 1 ] = { (char *) NULL } ;
+  char ** envp = env ;
+  char * argv [ 1 + NARG ] = { (char *) NULL } ;
+  char ** av = argv ;
 
   if ( 1 > n ) {
-    return luaL_error ( L, "pathname required" ) ;
+    return luaL_error ( L, "table argument required" ) ;
   }
 
-  if ( 0 < n ) {
-    path = luaL_checkstring ( L, 1 ) ;
+  if ( ( 0 < n ) && lua_istable ( L, 1 ) ) {
+    luaL_checktype ( L, 1, LUA_TTABLE ) ;
+  } else {
+    return luaL_argerror ( L, 1, "table expected" ) ;
   }
 
-  if ( 1 < n ) {
-    luaL_checktype ( L, 2, LUA_TTABLE ) ;
+  if ( EXEC_ENV & f ) {
+    if ( 2 > n ) {
+      return luaL_error ( L, "2 table arguments required" ) ;
+    }
+
+    if ( ( 1 < n ) && lua_istable ( L, 2 ) ) {
+      luaL_checktype ( L, 2, LUA_TTABLE ) ;
+    } else {
+      return luaL_argerror ( L, 2, "table expected" ) ;
+    }
   }
 
-  if ( 2 < n ) {
-    luaL_checktype ( L, 3, LUA_TTABLE ) ;
+  n = lua_rawlen ( L, 1 ) ;
+
+  if ( 1 > n ) {
+    return luaL_argerror ( L, 1, "table is no sequence" ) ;
+  } else if ( ( 2 > n ) && ( EXEC_ARGV0 & f ) ) {
+    return luaL_argerror ( L, 1, "table has not enough elements" ) ;
   }
 
-  if ( 2 > lua_gettop ( L ) ) {
-    return luaL_error ( L, "2 args required" ) ;
-  }
+  if ( 0 < n && NARG >= n ) {
+    for ( i = 0 ; n > i ; ++ i ) {
+      lua_pushinteger ( L, 1 + i ) ;
+      lua_rawget ( L, 1 ) ;
+      str = lua_tostring ( L, -1 ) ;
 
-  if ( 0 < n ) {
-    int i ;
-    const char * str = NULL ;
-    char ** av = NULL ;
-    char * argv [ 1 + NARG ] = { (char *) NULL } ;
-
-    if ( 0 < n && NARG >= n ) {
-      for ( i = 0 ; n > i ; ++ i ) {
-        str = luaL_checkstring ( L, 1 + i ) ;
-
-        if ( str && * str ) {
-          argv [ i ] = (char *) str ;
-        } else if ( str ) {
-          argv [ i ] = "" ;
-        } else {
-          return luaL_argerror ( L, i, "invalid string" ) ;
-        }
+      if ( str && * str ) {
+        argv [ i ] = (char *) str ;
+      } else if ( str ) {
+        argv [ i ] = "" ;
       }
+    }
 
-      argv [ i ] = (char *) NULL ;
-      av = argv ;
-    } else if ( NARG < n ) {
-      av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
+    argv [ i ] = (char *) NULL ;
+    av = argv ;
+  } else if ( NARG < n ) {
+    av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
 
-      if ( NULL == av ) {
+    if ( NULL == av ) {
+      lua_pushboolean ( L, 0 ) ;
+      return 1 ;
+    }
+
+    for ( i = 0 ; n > i ; ++ i ) {
+      lua_pushinteger ( L, 1 + i ) ;
+      lua_rawget ( L, 1 ) ;
+      str = lua_tostring ( L, -1 ) ;
+
+      if ( str && * str ) {
+        av [ i ] = (char *) str ;
+      } else if ( str ) {
+        av [ i ] = "" ;
+      }
+    }
+
+    av [ i ] = (char *) NULL ;
+  }
+
+  if ( EXEC_ENV & f ) {
+    n = lua_rawlen ( L, 2 ) ;
+
+    if ( 0 < n ) {
+      envp = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
+
+      if ( NULL == envp ) {
         lua_pushboolean ( L, 0 ) ;
         return 1 ;
       }
 
       for ( i = 0 ; n > i ; ++ i ) {
-        str = luaL_checkstring ( L, 1 + i ) ;
+        lua_pushinteger ( L, 1 + i ) ;
+        lua_rawget ( L, 2 ) ;
+        str = lua_tostring ( L, -1 ) ;
 
         if ( str && * str ) {
-          av [ i ] = (char *) str ;
+          envp [ i ] = (char *) str ;
         } else if ( str ) {
-          av [ i ] = "" ;
-        } else {
-          return luaL_argerror ( L, i, "invalid string" ) ;
+          envp [ i ] = "" ;
         }
       }
 
-      av [ i ] = (char *) NULL ;
-    }
-
-    /* run the requested execv*() syscall now */
-    if ( ( EXEC_PATH & f ) && ( EXEC_ARGV0 & f ) ) {
-      (void) execvp ( * av, 1 + av ) ;
-    } else if ( EXEC_ARGV0 & f ) {
-      (void) execv ( * av, 1 + av ) ;
-    } else if ( EXEC_PATH & f ) {
-      (void) execvp ( * av, av ) ;
+      envp [ i ] = (char *) NULL ;
     } else {
-      (void) execv ( * av, av ) ;
+      envp = env ;
     }
-
-    return res_false ( L ) ;
   }
 
-  return luaL_error ( L, "string args required" ) ;
+  /* run the requested execv*() syscall now */
+  if ( ( EXEC_ENV & f ) && ( EXEC_ARGV0 & f ) ) {
+    (void) execve ( * av, 1 + av, envp ) ;
+  } else if ( ( EXEC_PATH & f ) && ( EXEC_ARGV0 & f ) ) {
+    (void) execvp ( * av, 1 + av ) ;
+  } else if ( EXEC_ENV & f ) {
+    (void) execve ( * av, av, envp ) ;
+  } else if ( EXEC_PATH & f ) {
+    (void) execvp ( * av, av ) ;
+  } else if ( EXEC_ARGV0 & f ) {
+    (void) execv ( * av, 1 + av ) ;
+  } else {
+    (void) execv ( * av, av ) ;
+  }
+
+  return res_false ( L ) ;
 }
-#endif
 
 /* wrapper function for getuid(2) */
 static int Sgetuid ( lua_State * const L )
