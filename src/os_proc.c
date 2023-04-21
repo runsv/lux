@@ -78,7 +78,7 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
       argv [ i ] = (char *) NULL ;
       av = argv ;
     } else if ( NARG < n ) {
-      av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
+      av = (char **) lua_newuserdatauv ( L, ( 1 + n ) * sizeof ( char * ), 1 ) ;
 
       if ( NULL == av ) {
         lua_pushboolean ( L, 0 ) ;
@@ -184,7 +184,7 @@ static int do_execl ( lua_State * const L, const unsigned long int f )
       argv [ i ] = (char *) NULL ;
       av = argv ;
     } else if ( NARG < n ) {
-      av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
+      av = (char **) lua_newuserdatauv ( L, ( 1 + n ) * sizeof ( char * ), 1 ) ;
 
       if ( NULL == av ) {
         lua_pushboolean ( L, 0 ) ;
@@ -263,37 +263,43 @@ static int do_execv ( lua_State * const L, const unsigned long int f )
   }
 
   if ( 0 < n && NARG >= n ) {
-    for ( i = 0 ; n > i ; ++ i ) {
-      lua_pushinteger ( L, 1 + i ) ;
-      lua_rawget ( L, 1 ) ;
+    for ( i = 0 ; n > i ; ) {
+      lua_rawgeti ( L, 1, 1 + i ) ;
       str = lua_tostring ( L, -1 ) ;
 
-      if ( str && * str ) {
-        argv [ i ] = (char *) str ;
-      } else if ( str ) {
-        argv [ i ] = "" ;
+      if ( str ) {
+        if ( * str ) {
+          argv [ i ++ ] = (char *) str ;
+        } else {
+          argv [ i ++ ] = "" ;
+        }
+      } else {
+        return luaL_error ( L, "string expected" ) ;
       }
     }
 
     argv [ i ] = (char *) NULL ;
     av = argv ;
   } else if ( NARG < n ) {
-    av = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
+    av = (char **) lua_newuserdatauv ( L, ( 1 + n ) * sizeof ( char * ), 1 ) ;
 
     if ( NULL == av ) {
       lua_pushboolean ( L, 0 ) ;
       return 1 ;
     }
 
-    for ( i = 0 ; n > i ; ++ i ) {
-      lua_pushinteger ( L, 1 + i ) ;
-      lua_rawget ( L, 1 ) ;
+    for ( i = 0 ; n > i ; ) {
+      lua_rawgeti ( L, 1, 1 + i ) ;
       str = lua_tostring ( L, -1 ) ;
 
-      if ( str && * str ) {
-        av [ i ] = (char *) str ;
-      } else if ( str ) {
-        av [ i ] = "" ;
+      if ( str ) {
+        if ( * str ) {
+          av [ i ++ ] = (char *) str ;
+        } else {
+          av [ i ++ ] = "" ;
+        }
+      } else {
+        return luaL_error ( L, "string expected" ) ;
       }
     }
 
@@ -304,22 +310,21 @@ static int do_execv ( lua_State * const L, const unsigned long int f )
     n = lua_rawlen ( L, 2 ) ;
 
     if ( 0 < n ) {
-      envp = (char **) lua_newuserdatauv ( L, (1 + n) * sizeof ( char * ), 1 ) ;
+      envp = (char **) lua_newuserdatauv ( L, ( 1 + n ) * sizeof ( char * ), 1 ) ;
 
       if ( NULL == envp ) {
         lua_pushboolean ( L, 0 ) ;
         return 1 ;
       }
 
-      for ( i = 0 ; n > i ; ++ i ) {
-        lua_pushinteger ( L, 1 + i ) ;
-        lua_rawget ( L, 2 ) ;
+      for ( i = 0 ; n > i ; ) {
+        lua_rawgeti ( L, 2, 1 + i ) ;
         str = lua_tostring ( L, -1 ) ;
 
         if ( str && * str ) {
-          envp [ i ] = (char *) str ;
-        } else if ( str ) {
-          envp [ i ] = "" ;
+          envp [ i ++ ] = (char *) str ;
+        } else {
+          return luaL_error ( L, "\"NAME=VALUE\" string expected" ) ;
         }
       }
 
