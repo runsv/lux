@@ -119,6 +119,7 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
           } while ( ( 0 > p ) && ( EINTR == errno ) ) ;
 
           if ( 0 < p && p == pid ) {
+            lua_pushinteger ( L, p ) ;
             return get_exit_status ( L, w ) ;
           } else if ( 0 > p ) {
             return res_nil ( L ) ;
