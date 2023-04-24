@@ -2293,42 +2293,22 @@ static int Lvfork_execp0_wait ( lua_State * const L )
 
 static int l_execl ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return do_execl ( L, 0 ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return do_execl ( L, 0 ) ;
 }
 
 static int l_execl0 ( lua_State * const L )
 {
-  if ( ( 1 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) &&
-    lua_isstring ( L, 2 ) )
-  {
-    return do_execl ( L, EXEC_ARGV0 ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return do_execl ( L, EXEC_ARGV0 ) ;
 }
 
 static int l_execlp ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return do_execl ( L, EXEC_PATH ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return do_execl ( L, EXEC_PATH ) ;
 }
 
 static int l_execlp0 ( lua_State * const L )
 {
-  if ( ( 1 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) &&
-    lua_isstring ( L, 2 ) )
-  {
-    return do_execl ( L, EXEC_ARGV0 | EXEC_PATH ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return do_execl ( L, EXEC_ARGV0 | EXEC_PATH ) ;
 }
 
 /*
