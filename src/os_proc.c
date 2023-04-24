@@ -57,6 +57,10 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
     char * argv [ 1 + NARG ] = { (char *) NULL } ;
     char ** av = argv ;
 
+    if ( ( EXEC_ARGV0 & f ) && ( 2 > n ) ) {
+      return luaL_error ( L, "at least 2 string args required" ) ;
+    }
+
     /* check if all given args are strings before anything else */
     /*
     for ( i = 1 ; n >= i ; ++ i ) { luaL_checktype ( L, i, LUA_TSTRING ) ; }
@@ -168,6 +172,10 @@ static int do_execl ( lua_State * const L, const unsigned long int f )
     const char * str = NULL ;
     char * argv [ 1 + NARG ] = { (char *) NULL } ;
     char ** av = argv ;
+
+    if ( ( EXEC_ARGV0 & f ) && ( 2 > n ) ) {
+      return luaL_error ( L, "at least 2 string args required" ) ;
+    }
 
     if ( 0 < n && NARG >= n ) {
       for ( i = 0 ; n > i ; ++ i ) {
