@@ -2175,23 +2175,25 @@ static int Lexec ( lua_State * L, const unsigned int f )
  */
 
 /* wrapper function for the execv syscall */
-static int Lexecl ( lua_State * const L )
+static int x_execl ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, 0 ) ;
-  }
+  return vfork_exec ( L, 0 ) ;
+}
 
-  return luaL_error ( L, "string args required" ) ;
+static int x_execl0 ( lua_State * const L )
+{
+  return vfork_exec ( L, EXEC_ARGV0 ) ;
 }
 
 /* wrapper function for the execvp syscall */
-static int Lexeclp ( lua_State * const L )
+static int x_execlp ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_PATH ) ;
-  }
+  return vfork_exec ( L, EXEC_PATH ) ;
+}
 
-  return luaL_error ( L, "string args required" ) ;
+static int x_execlp0 ( lua_State * const L )
+{
+  return vfork_exec ( L, EXEC_ARGV0 | EXEC_PATH ) ;
 }
 
 /* wrapper function for the execv syscall */
