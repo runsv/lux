@@ -362,67 +362,67 @@ static int do_execv ( lua_State * const L, const unsigned long int f )
 }
 
 /* wrapper function for getuid(2) */
-static int Sgetuid ( lua_State * const L )
+static int u_getuid ( lua_State * const L )
 {
   lua_pushinteger ( L, getuid () ) ;
   return 1 ;
 }
 
 /* wrapper function for geteuid(2) */
-static int Sgeteuid ( lua_State * const L )
+static int u_geteuid ( lua_State * const L )
 {
   lua_pushinteger ( L, geteuid () ) ;
   return 1 ;
 }
 
 /* wrapper function for getgid(2) */
-static int Sgetgid ( lua_State * const L )
+static int u_getgid ( lua_State * const L )
 {
   lua_pushinteger ( L, getgid () ) ;
   return 1 ;
 }
 
 /* wrapper function for getegid(2) */
-static int Sgetegid ( lua_State * const L )
+static int u_getegid ( lua_State * const L )
 {
   lua_pushinteger ( L, getegid () ) ;
   return 1 ;
 }
 
 /* wrapper function for getpid(2) */
-static int Sgetpid ( lua_State * const L )
+static int u_getpid ( lua_State * const L )
 {
   lua_pushinteger ( L, getpid () ) ;
   return 1 ;
 }
 
 /* wrapper function for getppid(2) */
-static int Sgetppid ( lua_State * const L )
+static int u_getppid ( lua_State * const L )
 {
   lua_pushinteger ( L, getppid () ) ;
   return 1 ;
 }
 
 /* wrapper function for setuid(2) */
-static int Ssetuid ( lua_State * const L )
+static int u_setuid ( lua_State * const L )
 {
   return res0( L, "setuid", setuid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 /* wrapper function for seteuid(2) */
-static int Sseteuid ( lua_State * const L )
+static int u_seteuid ( lua_State * const L )
 {
   return res0( L, "seteuid", seteuid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 /* wrapper function for setgid(2) */
-static int Ssetgid ( lua_State * const L )
+static int u_setgid ( lua_State * const L )
 {
   return res0( L, "setgid", setgid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
 /* wrapper function for setegid(2) */
-static int Ssetegid ( lua_State * const L )
+static int u_setegid ( lua_State * const L )
 {
   return res0( L, "setegid", setegid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
