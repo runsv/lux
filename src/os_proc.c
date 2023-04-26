@@ -274,6 +274,11 @@ static int do_execv ( lua_State * const L, const unsigned long int f )
   if ( 0 < n && NARG >= n ) {
     for ( i = 0 ; n > i ; ) {
       lua_rawgeti ( L, 1, 1 + i ) ;
+
+      if ( 0 == lua_isstring ( L, -1 ) ) {
+        return luaL_argerror ( L, 1, "string element expected" ) ;
+      }
+
       str = lua_tostring ( L, -1 ) ;
 
       if ( str ) {
@@ -299,6 +304,11 @@ static int do_execv ( lua_State * const L, const unsigned long int f )
 
     for ( i = 0 ; n > i ; ) {
       lua_rawgeti ( L, 1, 1 + i ) ;
+
+      if ( 0 == lua_isstring ( L, -1 ) ) {
+        return luaL_argerror ( L, 1, "string element expected" ) ;
+      }
+
       str = lua_tostring ( L, -1 ) ;
 
       if ( str ) {
@@ -328,6 +338,11 @@ static int do_execv ( lua_State * const L, const unsigned long int f )
 
       for ( i = 0 ; n > i ; ) {
         lua_rawgeti ( L, 2, 1 + i ) ;
+
+        if ( 0 == lua_isstring ( L, -1 ) ) {
+          return luaL_argerror ( L, 2, "string element expected" ) ;
+        }
+
         str = lua_tostring ( L, -1 ) ;
 
         if ( str && * str ) {
