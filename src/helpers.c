@@ -1333,6 +1333,7 @@ static int kill_all_sol ( const int sig )
 }
 #endif
 
+#if 0
 /* generic killall5 like function that kill(2)s/signals all running processes.
  * it does an exhaustive search for processes and kills ALL of them, EXCEPT;
  *	- itself
@@ -1477,6 +1478,7 @@ static void killall5 ( const int sig )
 #endif
   /* kill ( -1, SIGCONT ) ; */
 }
+#endif
 
 static int setnoctty ( const int fd )
 {

@@ -443,21 +443,21 @@ static int u_setegid ( lua_State * const L )
 }
 
 /* wrapper function for setreuid(2) */
-static int Ssetreuid ( lua_State * const L )
+static int u_setreuid ( lua_State * const L )
 {
   return res0( L, "setreuid",
     setreuid ( luaL_checkinteger ( L, 1 ), luaL_checkinteger ( L, 2 ) ) ) ;
 }
 
 /* wrapper function for setregid(2) */
-static int Ssetregid ( lua_State * const L )
+static int u_setregid ( lua_State * const L )
 {
   return res0( L, "setregid",
     setregid ( luaL_checkinteger ( L, 1 ), luaL_checkinteger ( L, 2 ) ) ) ;
 }
 
 /* wrapper function for getresuid(2) */
-static int Sgetresuid ( lua_State * const L )
+static int u_getresuid ( lua_State * const L )
 {
 #if (defined (OSLinux) && defined (_GNU_SOURCE)) || defined (OSfreebsd) || defined (OShpux)
   uid_t r, e, s ;
@@ -476,7 +476,7 @@ static int Sgetresuid ( lua_State * const L )
 }
 
 /* wrapper function for getresgid(2) */
-static int Sgetresgid ( lua_State * const L )
+static int u_getresgid ( lua_State * const L )
 {
 #if (defined (OSLinux) && defined (_GNU_SOURCE)) || defined (OSfreebsd) || defined (OShpux)
   gid_t r, e, s ;
@@ -495,7 +495,7 @@ static int Sgetresgid ( lua_State * const L )
 }
 
 /* wrapper function for setresuid(2) */
-static int Ssetresuid ( lua_State * const L )
+static int u_setresuid ( lua_State * const L )
 {
 #if (defined (OSLinux) && defined (_GNU_SOURCE)) || defined (OSfreebsd) || defined (OShpux)
   return res0( L, "setresuid", setresuid ( luaL_checkinteger ( L, 1 ),
@@ -506,7 +506,7 @@ static int Ssetresuid ( lua_State * const L )
 }
 
 /* wrapper function for setresgid(2) */
-static int Ssetresgid ( lua_State * const L )
+static int u_setresgid ( lua_State * const L )
 {
 #if (defined (OSLinux) && defined (_GNU_SOURCE)) || defined (OSfreebsd) || defined (OShpux)
   return res0( L, "setresgid", setresgid ( luaL_checkinteger ( L, 1 ),
@@ -518,14 +518,14 @@ static int Ssetresgid ( lua_State * const L )
 
 #if defined (OSLinux)
 /* wrapper function for setfsuid(2) */
-static int Ssetfsuid ( lua_State * const L )
+static int u_setfsuid ( lua_State * const L )
 {
   lua_pushinteger ( L, setfsuid ( luaL_checkinteger ( L, 1 ) ) ) ;
   return 1 ;
 }
 
 /* wrapper function for setfsgid(2) */
-static int Ssetfsgid ( lua_State * const L )
+static int u_setfsgid ( lua_State * const L )
 {
   lua_pushinteger ( L, setfsgid ( luaL_checkinteger ( L, 1 ) ) ) ;
   return 1 ;
@@ -732,7 +732,7 @@ static int Sgetgrouplist ( lua_State * const L )
 #undef NEL
 
 /* wrapper for the kill(2) syscall */
-static int Skill ( lua_State * const L )
+static int u_kill ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -762,7 +762,7 @@ static int Skill ( lua_State * const L )
 }
 
 /* wrapper for the pgkill(2) syscall */
-static int Skillpg ( lua_State * const L )
+static int u_killpg ( lua_State * const L )
 {
   const int n = lua_gettop ( L ) ;
 
@@ -830,121 +830,8 @@ static int Ssigqueue ( lua_State * const L )
 }
 #endif
 
-#if defined (OSsolaris) || defined (OSsunos5)
-static int Ssigsendset ( lua_State * const L )
-{
-  return 0 ;
-}
-
-static int Lkill_all_sol ( lua_State * const L )
-{
-  int i = luaL_checkinteger ( L, 1 ) ;
-
-  if ( 0 < i && NSIG > i ) {
-    i = kill_all_sol ( i ) ;
-    lua_pushinteger ( L, i ) ;
-    return 1 ;
-  }
-
-  return 0 ;
-}
-#endif
-
-static int Lgen_kill_all ( lua_State * const L )
-{
-  const int s = luaL_optinteger ( L, 1, SIGTERM ) ;
-
-  if ( 0 < s && NSIG > s ) {
-    gen_kill_all ( s ) ;
-    return 0 ;
-  }
-
-  return luaL_argerror ( L, 1, "invalid signal number" ) ;
-}
-
-static int Lkill_all_procs ( lua_State * const L )
-{
-  int i = lua_gettop ( L ) ;
-
-  if ( ( 0 < i ) && lua_isinteger ( L, 1 ) ) {
-    const int sig = luaL_checkinteger ( L, 1 ) ;
-
-    if ( 0 <= sig && NSIG > sig ) {
-      char pa, pg, ses ;
-
-      pa = 3 ;
-      pg = ses = 0 ;
-
-      if ( ( 1 < i ) && lua_isboolean ( L, 2 ) ) {
-        pg = lua_toboolean ( L, 2 ) ? 3 : 0 ;
-      }
-
-      if ( ( 2 < i ) && lua_isboolean ( L, 3 ) ) {
-        pa = lua_toboolean ( L, 3 ) ? 3 : 0 ;
-      }
-
-      if ( ( 3 < i ) && lua_isboolean ( L, 4 ) ) {
-        ses = lua_toboolean ( L, 4 ) ? 3 : 0 ;
-      }
-
-      i = kill_all_procs ( sig, pg, pa, ses ) ;
-      lua_pushinteger ( L, i ) ;
-      return 1 ;
-    }
-  }
-
-  return 0 ;
-}
-
-/* kills all (remaining) processes (when the system is shut down) */
-static int Lkill_procs ( lua_State * const L )
-{
-  int i = geteuid () ;
-
-  /* this makes only sense for the super user */
-  if ( i ) { return 0 ; }
-  i = luaL_optinteger ( L, 1, 0 ) ;
-  /* time in seconds to wait before sending SIGKILL */
-  i = ( 0 < i && 10 > i ) ? i : 0 ;
-  /* protect against SIGTERM and SIGHUP
-   * (not really necessary on Linux and BSD)
-   */
-#if defined (OSLinux) || defined (OSbsd)
-#else
-  (void) signal ( SIGTERM, SIG_IGN ) ;
-  (void) signal ( SIGHUP, SIG_IGN ) ;
-  (void) signal ( SIGINT, SIG_IGN ) ;
-#endif
-  sync () ;
-#if defined (OSsolaris) || defined (OSsunos5)
-  (void) kill_all_sol ( SIGTERM ) ;
-  (void) kill_all_sol ( SIGHUP ) ;
-  (void) kill_all_sol ( SIGINT ) ;
-  (void) kill_all_sol ( SIGCONT ) ;
-#else
-  (void) kill ( -1, SIGTERM ) ;
-  (void) kill ( -1, SIGHUP ) ;
-  (void) kill ( -1, SIGINT ) ;
-  (void) kill ( -1, SIGCONT ) ;
-#endif
-  if ( 0 < i && 10 > i ) { do_sleep ( i, 0 ) ; }
-  else { do_sleep ( 0, 300 * 1000 ) ; }
-#if defined (OSsolaris) || defined (OSsunos5)
-  (void) kill_all_sol ( SIGKILL ) ;
-#elif defined (OSLinux) || defined (OSbsd)
-  (void) kill ( -1, SIGKILL ) ;
-#else
-  /* TODO: find all remaining processes and kill them one by one */
-#endif
-  /* reap possible zombie/dead child processes */
-  do { i = waitpid ( -1, NULL, WNOHANG ) ; }
-  while ( ( 0 < i ) || ( 0 > i && EINTR == errno ) ) ;
-  sync () ;
-  return 0 ;
-}
-
 /* wrapper for the raise syscall */
-static int Sraise ( lua_State * const L )
+static int u_raise ( lua_State * const L )
 {
   int s = luaL_checkinteger ( L, 1 ) ;
 
@@ -977,14 +864,14 @@ static int u_pause ( lua_State * const L )
  * (POSIX.1 version without args that always succeeds
  * and returns the PGID of the calling process)
  */
-static int Sgetpgrp ( lua_State * const L )
+static int u_getpgrp ( lua_State * const L )
 {
   lua_pushinteger ( L, getpgrp () ) ;
   return 1 ;
 }
 
 /* wrapper function for the getpgid() syscall */
-static int Sgetpgid ( lua_State * const L )
+static int u_getpgid ( lua_State * const L )
 {
   int e = 0 ;
   int i = luaL_optinteger ( L, 1, 0 ) ;
@@ -1003,7 +890,7 @@ static int Sgetpgid ( lua_State * const L )
 }
 
 /* wrapper function for the setpgid syscall */
-static int Ssetpgid ( lua_State * const L )
+static int u_setpgid ( lua_State * const L )
 {
   pid_t pid = 0, pgid = 0 ;
 
@@ -1026,7 +913,7 @@ static int Ssetpgid ( lua_State * const L )
 /* wrapper function for the setpgrp syscall
  * (System V version without args)
  */
-static int Ssetpgrp ( lua_State * const L )
+static int u_setpgrp ( lua_State * const L )
 {
   if ( setpgrp () ) {
     const int e = errno ;
@@ -1038,7 +925,7 @@ static int Ssetpgrp ( lua_State * const L )
 }
 
 /* wrapper function for the getsid syscall */
-static int Sgetsid ( lua_State * const L )
+static int u_getsid ( lua_State * const L )
 {
   const pid_t p = luaL_optinteger ( L, 1, 0 ) ;
   const pid_t s = getsid ( p ) ;
@@ -1054,7 +941,7 @@ static int Sgetsid ( lua_State * const L )
 }
 
 /* wrapper function for the setsid(2) syscall */
-static int Ssetsid ( lua_State * const L )
+static int u_setsid ( lua_State * const L )
 {
   const pid_t p = setsid () ;
 
@@ -1069,7 +956,7 @@ static int Ssetsid ( lua_State * const L )
 }
 
 /* call setsid() before setpgid() */
-static int Ldo_setsid ( lua_State * const L )
+static int x_dosetsid ( lua_State * const L )
 {
   int i = setsid () ;
 
@@ -1184,7 +1071,7 @@ static int Lsec_umask ( lua_State * L )
 }
 
 /* wrapper function for nice(2) */
-static int Snice ( lua_State * const L )
+static int u_nice ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
 
