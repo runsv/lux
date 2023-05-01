@@ -1348,7 +1348,7 @@ static void add_const ( lua_State * const L )
    * while the main module table should be at the stack
    * position directly below it (i. e. at index -2).
    */
-  lua_setfield ( L, -2, "SysConstants" ) ;
+  lua_setfield ( L, -2, "Constants" ) ;
 
   /* end of function add_const */
 }

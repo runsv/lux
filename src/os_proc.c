@@ -104,6 +104,9 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
       av [ i ] = (char *) NULL ;
     }
 
+    /* restore default signal handling behaviour and unblock all signals? */
+    if ( EXEC_DEFSIG & f ) { reset_sigs () ; }
+
     if ( EXEC_VFORK & f ) {
       (void) fflush ( NULL ) ;
       pid = vfork () ;
@@ -134,9 +137,6 @@ static int vfork_exec ( lua_State * const L, const unsigned long int f )
         return 1 ;
       }
     }
-
-    /* restore default signal handling behaviour and unblock all signals ? */
-    if ( EXEC_DEFSIG & f ) { reset_sigs () ; }
 
     /* run the requested execv*() syscall now */
     if ( ( EXEC_PATH & f ) && ( EXEC_ARGV0 & f ) ) {
@@ -2101,94 +2101,54 @@ static int x_execlp0 ( lua_State * const L )
 /* wrapper function for the execv syscall */
 static int Ldefsig_execl ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_DEFSIG ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_DEFSIG ) ;
 }
 
 /* wrapper function for the execv syscall */
 static int Ldefsig_execlp ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_PATH | EXEC_DEFSIG ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_PATH | EXEC_DEFSIG ) ;
 }
 
 /* vfork(2) and execve(2) into a given executable */
 static int Lvfork_exec_nowait ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_VFORK ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_VFORK ) ;
 }
 
 static int Lvfork_exec_wait ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_VFORK | EXEC_WAITPID ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_VFORK | EXEC_WAITPID ) ;
 }
 
 static int Lvfork_execp_nowait ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_PATH | EXEC_VFORK ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_PATH | EXEC_VFORK ) ;
 }
 
 static int Lvfork_execp_wait ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_PATH | EXEC_VFORK | EXEC_WAITPID ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_PATH | EXEC_VFORK | EXEC_WAITPID ) ;
 }
 
 static int Lvfork_exec0_nowait ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_ARGV0 | EXEC_VFORK ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_ARGV0 | EXEC_VFORK ) ;
 }
 
 static int Lvfork_exec0_wait ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_ARGV0 | EXEC_VFORK | EXEC_WAITPID ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_ARGV0 | EXEC_VFORK | EXEC_WAITPID ) ;
 }
 
 static int Lvfork_execp0_nowait ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_ARGV0 | EXEC_PATH | EXEC_VFORK ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_ARGV0 | EXEC_PATH | EXEC_VFORK ) ;
 }
 
 static int Lvfork_execp0_wait ( lua_State * const L )
 {
-  if ( ( 0 < lua_gettop ( L ) ) && lua_isstring ( L, 1 ) ) {
-    return vfork_exec ( L, EXEC_ARGV0 | EXEC_PATH | EXEC_VFORK | EXEC_WAITPID ) ;
-  }
-
-  return luaL_error ( L, "string args required" ) ;
+  return vfork_exec ( L, EXEC_ARGV0 | EXEC_PATH | EXEC_VFORK | EXEC_WAITPID ) ;
 }
 
 /*
