@@ -86,6 +86,7 @@
 #include <sys/errno.h>
 #include <sys/syscall.h>
 #include <sys/param.h>
+#include <sys/random.h>
 #include <sys/uio.h>
 #include <sys/time.h>
 #include <sys/times.h>

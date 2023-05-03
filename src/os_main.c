@@ -292,7 +292,6 @@ static int res_false ( lua_State * const L )
 /*
 #include "os_net.c"
 */
-#include "os_utils.c"
 #include "os_gen.c"
 
 /* OS specific functions */
@@ -683,43 +682,70 @@ static int Spivot_root ( lua_State * const L )
 
   return 0 ;
 }
+#endif
 
-/* get an (unsigned short) int from /dev/urandom */
-static int Lgetrandom_int ( lua_State * const L )
+/* reads some bytes from /dev/urandom to create a random
+ * integer and returns it
+ */
+static int x_get_urandom_int ( lua_State * const L )
 {
-#  if defined (SYS_getrandom)
-  unsigned short int u = 0 ;
-  long int i = syscall ( SYS_getrandom, & u, sizeof ( u ), GRND_NONBLOCK ) ;
+  int e = 0 ;
+  ssize_t s = 0 ;
+  lua_Integer u = 0 ;
+  const int fd = open ( "/dev/urandom", O_RDONLY | O_NONBLOCK | O_CLOEXEC ) ;
 
-  if ( sizeof ( u ) == i ) {
+  if ( 0 > fd ) {
+    return res_nil ( L ) ;
+  }
+
+  s = read ( fd, & u, sizeof ( u ) ) ;
+  e = errno ;
+  (void) close_fd ( fd ) ;
+
+  if ( 0 > s ) {
+    errno = e ;
+    return res_nil ( L ) ;
+  } else if ( 0 == s ) {
+    lua_pushinteger ( L, 0 ) ;
+  } else if ( 0 < s ) {
     lua_pushinteger ( L, u ) ;
-  } else if ( 0 > i ) {
-    i = errno ;
-    lua_pushinteger ( L, -1 ) ;
-    lua_pushinteger ( L, i ) ;
-    return 2 ;
-  } else {
-    lua_pushinteger ( L, -3 ) ;
+  }
+
+  /*
+  if ( sizeof ( u ) > s )
+  { lua_pushinteger ( L, 0 ) ; }
+  else { lua_pushinteger ( L, u ) ; }
+  */
+
+  return 1 ;
+}
+
+#if defined (OSLinux)
+/* get a random int from /dev/urandom */
+static int x_get_random_int ( lua_State * const L )
+{
+  lua_Integer u = 0 ;
+  const ssize_t s = getrandom ( & u, sizeof ( u ), GRND_NONBLOCK ) ;
+
+  if ( 0 > s ) {
+    return res_nil ( L ) ;
+  } else if ( 0 == s ) {
+    lua_pushinteger ( L, 0 ) ;
+  } else if ( 0 < s ) {
+    lua_pushinteger ( L, u ) ;
   }
 
   return 1 ;
-#  else
-  return 0 ;
-#  endif
 }
 #endif
 
 /* wrapper to the uname syscall */
-static int Suname ( lua_State * const L )
+static int u_uname ( lua_State * const L )
 {
-  int i = -3, e = 0 ;
   struct utsname utsn ;
 
-  i = uname ( & utsn ) ;
-  e = errno ;
-
-  if ( i ) {
-    lua_pushnil ( L ) ;
+  if ( uname ( & utsn ) ) {
+    return res_nil ( L ) ;
   } else {
     lua_createtable ( L, 0, 5 ) ;
     (void) lua_pushliteral ( L, "os" ) ;
@@ -739,10 +765,7 @@ static int Suname ( lua_State * const L )
     lua_rawset ( L, -3 ) ;
   }
 
-  lua_pushinteger ( L, i ) ;
-  lua_pushinteger ( L, e ) ;
-
-  return 3 ;
+  return 1 ;
 }
 
 /* wrapper to acct (process accounting) */
@@ -1832,11 +1855,6 @@ static const luaL_Reg sys_func [ ] =
   */
   /* end of imported functions from "os_net.c" */
 
-  /* functions imported from "os_utils.c" : */
-  { "init_urandom",		Linit_urandom		},
-  { "get_urandom_int",		Lget_urandom_int	},
-  /* end of imported functions from "os_utils.c" */
-
   /* functions imported from "os_gen.c" : */
   { "umount",			Sunmount	},
   { "unmount",			Sunmount	},
@@ -1899,7 +1917,7 @@ static const luaL_Reg sys_func [ ] =
   { "strerror",			Sstrerror	},
   { "strerror_r",		Sstrerror_r	},
   { "getprogname",		Lgetprogname	},
-  { "uname",			Suname		},
+  { "uname",			u_uname		},
   { "acct",			Sacct		},
   { "sethostname",		Ssethostname		},
   { "gethostname",		Sgethostname		},
@@ -1907,9 +1925,10 @@ static const luaL_Reg sys_func [ ] =
   { "getdomainname",		Sgetdomainname		},
   { "gethostid",		Sgethostid		},
   { "sethostid",		Ssethostid		},
+  { "get_urandom_int",		x_get_urandom_int	},
 #if defined (OSLinux)
   { "pivot_root",		Spivot_root		},
-  { "getrandom_int",		Lgetrandom_int		},
+  { "get_random_int",		x_get_random_int	},
 #elif defined (OSsolaris) || defined (OSsunos5)
   { "uadmin",			Suadmin		},
 #endif
@@ -1937,7 +1956,7 @@ static int openMod ( lua_State * const L )
   add_const ( L ) ;
 
   /* set version information */
-  (void) lua_pushliteral ( L, "_Version" ) ;
+  (void) lua_pushliteral ( L, "_VERSION" ) ;
   (void) lua_pushliteral ( L,
     "lux version " LUX_VERSION " for " LUA_VERSION " ("
 #if defined (OS)

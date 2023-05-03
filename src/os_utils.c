@@ -128,27 +128,6 @@ static int Linit_urandom ( lua_State * L )
   return 0 ;
 }
 
-/* reads some bytes from to /dev/urandom to create a random positive
- * integer and returns it
- */
-static int Lget_urandom_int ( lua_State * L )
-{
-  const int fd = open ( "/dev/urandom", O_RDONLY | O_NONBLOCK | O_CLOEXEC ) ;
-
-  if ( 0 > fd ) {
-    lua_pushinteger ( L, -1 ) ;
-  } else {
-    unsigned short int u = 0 ;
-
-    if ( sizeof ( u ) > read ( fd, & u, sizeof ( u ) ) )
-    { lua_pushinteger ( L, -1 ) ; }
-    else { lua_pushinteger ( L, u ) ; }
-    close_fd ( fd ) ;
-  }
-
-  return 1 ;
-}
-
 #if 0
 /* check if a given pidfile exists and contains a valid pid */
 static int Lcheck_pidfile ( lua_State * L )
