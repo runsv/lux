@@ -690,14 +690,6 @@ static int u_gethostid ( lua_State * const L )
 
 static int u_sethostid ( lua_State * const L )
 {
-  long int i = luaL_checkinteger ( L, 1 ) ;
-
-  if ( sethostid ( i ) ) {
-    const int e = errno ;
-    return luaL_error ( L, "sethostid() failed: %s (errno %d)",
-      strerror ( e ), e ) ;
-  }
-
-  return 0 ;
+  return res_bool_zero ( L, sethostid ( luaL_checkinteger ( L, 1 ) ) ) ;
 }
 
