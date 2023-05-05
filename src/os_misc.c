@@ -442,30 +442,18 @@ static int x_getprogname ( lua_State * const L )
 #endif
 }
 
-#if defined (OSLinux)
+#if defined (OSLinux) && defined (SYS_pivot_root)
 /* changes the root filesystem */
 static int u_pivot_root ( lua_State * const L )
 {
-#  if defined (SYS_pivot_root)
   const char * new = luaL_checkstring ( L, 1 ) ;
   const char * old = luaL_checkstring ( L, 2 ) ;
 
   if ( new && old && * new && * old ) {
-    long int i = syscall ( SYS_pivot_root, new, old ) ;
-
-    if ( i ) {
-      i = errno ;
-      lua_pushinteger ( L, -1 ) ;
-      lua_pushinteger ( L, i ) ;
-      return 2 ;
-    } else {
-      lua_pushinteger ( L, 0 ) ;
-      return 1 ;
-    }
+    return res_bool_zero ( L, syscall ( SYS_pivot_root, new, old ) ) ;
   }
-#  endif
 
-  return 0 ;
+  return luaL_error ( L, "2 pathname args required" ) ;
 }
 #endif
 
@@ -609,13 +597,7 @@ static int u_sethostname ( lua_State * const L )
     s = ( HOST_NAME_MAX < s ) ? HOST_NAME_MAX : s ;
 
     if ( 0 < s ) {
-      if ( sethostname ( name, s ) ) {
-        const int e = errno ;
-        return luaL_error ( L, "sethostname() failed: %s (errno %d)",
-          strerror ( e ), e ) ;
-      }
-
-      return 0 ;
+      return res_bool_zero ( L, sethostname ( name, s ) ) ;
     }
   }
 
@@ -628,9 +610,7 @@ static int u_gethostname ( lua_State * const L )
   char buf [ 2 + HOST_NAME_MAX ] = { 0 } ;
 
   if ( gethostname ( buf, 1 + HOST_NAME_MAX ) ) {
-    const int e = errno ;
-    return luaL_error ( L, "gethostname() failed: %s (errno %d)",
-      strerror ( e ), e ) ;
+    return res_nil ( L ) ;
   } else if ( buf [ 0 ] ) {
     (void) lua_pushstring ( L, buf ) ;
     return 1 ;
@@ -646,13 +626,7 @@ static int u_setdomainname ( lua_State * const L )
   const char * name = luaL_checkstring ( L, 1 ) ;
 
   if ( name && * name ) {
-    if ( setdomainname ( name, strlen ( name ) ) ) {
-      const int e = errno ;
-      return luaL_error ( L, "setdomainname() failed: %s (errno %d)",
-        strerror ( e ), e ) ;
-    }
-
-    return 0 ;
+    return res_bool_zero ( L, setdomainname ( name, strlen ( name ) ) ) ;
   }
 
   return luaL_error ( L, "non empty domain name required" ) ;
@@ -668,9 +642,7 @@ static int u_getdomainname ( lua_State * const L )
   char buf [ 66 ] = { 0 } ;
 
   if ( getdomainname ( buf, 65 ) ) {
-    const int e = errno ;
-    return luaL_error ( L, "getdomainname() failed: %s (errno %d)",
-      strerror ( e ), e ) ;
+    return res_nil ( L ) ;
   } else if ( buf [ 0 ] ) {
     (void) lua_pushstring ( L, buf ) ;
     return 1 ;

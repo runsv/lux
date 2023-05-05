@@ -137,6 +137,10 @@ sys.o :		sys.c
 	@echo "  CC	$@"
 	$(CROSS)$(CC) $(CFLAGS) -I$(LUA_INC_DIR) -fPIC -O2 -c $^
 
+rc.o :		rc.c
+	@echo "  CC	$@"
+	$(CROSS)$(CC) $(CFLAGS) -I$(LUA_INC_DIR) -fPIC -O2 -c $^
+
 sys.so :	sys.o
 	@echo "  LD	$@"
 	$(CROSS)$(LD) $(LDFLAGS) -fPIC -shared -o $@ $^
@@ -149,6 +153,10 @@ xinu.so :	sys.o
 	@echo "  LD	$@"
 	$(CROSS)$(LD) $(LDFLAGS) -fPIC -shared -o $@ $^
 
+rc.so :		rc.o
+	@echo "  LD	$@"
+	$(CROSS)$(LD) $(LDFLAGS) -fPIC -shared -o $@ $^
+
 lua_einfo.o :		lua_einfo.c
 	@echo "  CC	$@"
 	$(CROSS)$(CC) $(CFLAGS) -I$(EINFO_INC_DIR) -I$(LUA_INC_DIR) -fPIC -O2 -c $^
@@ -157,7 +165,7 @@ einfo.so :		lua_einfo.o
 	@echo "  LD	$@"
 	$(CROSS)$(LD) $(LDFLAGS) -fPIC -shared -o $@ $^ $(EINFO_LIB)
 
-einfo :		lua einfo.so
+einfo :		einfo.so
 
 pesi :		pesi.so sys.so xinu.so
 
