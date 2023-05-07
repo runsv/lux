@@ -3,6 +3,8 @@
  * OpenRC's enhanced information output library
  * used to print (colorful where possible) informational output
  * to terminals or to syslog.
+ *
+ * public domain
  */
 
 #include "feat.h"
@@ -27,25 +29,25 @@
 /* indents the einfo lines.
  * for each indent you should outdent when done.
  */
-static int Leindent ( lua_State * const L )
+static int x_eindent ( lua_State * const L )
 {
   eindent () ;
   return 0 ;
 }
 
-static int Leindentv ( lua_State * const L )
+static int x_eindentv ( lua_State * const L )
 {
   eindentv () ;
   return 0 ;
 }
 
-static int Leoutdent ( lua_State * const L )
+static int x_eoutdent ( lua_State * const L )
 {
   eoutdent () ;
   return 0 ;
 }
 
-static int Leoutdentv ( lua_State * const L )
+static int x_eoutdentv ( lua_State * const L )
 {
   eoutdentv () ;
   return 0 ;
@@ -66,7 +68,7 @@ static int Leoutdentv ( lua_State * const L )
  * The v suffix means only print if EINFO_VERBOSE is yes.
  * The x suffix means function will exit() returning failure.
  */
-static int Leinfo ( lua_State * const L )
+static int x_einfo ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -78,7 +80,7 @@ static int Leinfo ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Leinfon ( lua_State * const L )
+static int x_einfon ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -90,7 +92,7 @@ static int Leinfon ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Leinfov ( lua_State * const L )
+static int x_einfov ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -102,7 +104,7 @@ static int Leinfov ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Leinfovn ( lua_State * const L )
+static int x_einfovn ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -114,7 +116,7 @@ static int Leinfovn ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Lewarn ( lua_State * const L )
+static int x_ewarn ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -126,7 +128,7 @@ static int Lewarn ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Lewarnn ( lua_State * const L )
+static int x_ewarnn ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -138,7 +140,7 @@ static int Lewarnn ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Lewarnv ( lua_State * const L )
+static int x_ewarnv ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -150,7 +152,7 @@ static int Lewarnv ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Lewarnvn ( lua_State * const L )
+static int x_ewarnvn ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -162,7 +164,7 @@ static int Lewarnvn ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Lewarnx ( lua_State * const L )
+static int x_ewarnx ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -174,7 +176,7 @@ static int Lewarnx ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Leerror ( lua_State * const L )
+static int x_eerror ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -186,7 +188,7 @@ static int Leerror ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Leerrorn ( lua_State * const L )
+static int x_eerrorn ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -198,7 +200,7 @@ static int Leerrorn ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Leerrorx ( lua_State * const L )
+static int x_eerrorx ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -213,7 +215,7 @@ static int Leerrorx ( lua_State * const L )
 /* display informational messages that may take some time.
  * similar to einfo, but we add ... to the end of the message.
  */
-static int Lebegin ( lua_State * const L )
+static int x_ebegin ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -225,7 +227,7 @@ static int Lebegin ( lua_State * const L )
   return luaL_argerror ( L, 1, "non empty string required" ) ;
 }
 
-static int Lebeginv ( lua_State * const L )
+static int x_ebeginv ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -238,7 +240,7 @@ static int Lebeginv ( lua_State * const L )
 }
 
 /*
-static int Lebeginvn ( lua_State * const L )
+static int x_ebeginvn ( lua_State * const L )
 {
   const char * fmt = luaL_checkstring ( L, 1 ) ;
 
@@ -256,7 +258,7 @@ static int Lebeginvn ( lua_State * const L )
  * eend places [ ok ] or [ !! ] at the end of the terminal line depending on
  * retval (0 or ok, anything else for !!).
  */
-static int Leend ( lua_State * const L )
+static int x_eend ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -270,7 +272,7 @@ static int Leend ( lua_State * const L )
   return luaL_error ( L, "non empty string and integer required" ) ;
 }
 
-static int Leendv ( lua_State * const L )
+static int x_eendv ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -285,7 +287,7 @@ static int Leendv ( lua_State * const L )
 }
 
 /*
-static int Leendvn ( lua_State * const L )
+static int x_eendvn ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -300,7 +302,7 @@ static int Leendvn ( lua_State * const L )
 }
 */
 
-static int Lewend ( lua_State * const L )
+static int x_ewend ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -314,7 +316,7 @@ static int Lewend ( lua_State * const L )
   return luaL_error ( L, "non empty string and integer required" ) ;
 }
 
-static int Lewendv ( lua_State * const L )
+static int x_ewendv ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -329,7 +331,7 @@ static int Lewendv ( lua_State * const L )
 }
 
 /*
-static int Lewendvn ( lua_State * const L )
+static int x_ewendvn ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -347,7 +349,7 @@ static int Lewendvn ( lua_State * const L )
 /* the following e*end*2 functions don't return their first
  * (Lua) integer argument to the caller.
  */
-static int Leend2 ( lua_State * const L )
+static int x_eend2 ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -360,7 +362,7 @@ static int Leend2 ( lua_State * const L )
   return luaL_error ( L, "non empty string and integer required" ) ;
 }
 
-static int Leendv2 ( lua_State * const L )
+static int x_eendv2 ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -374,7 +376,7 @@ static int Leendv2 ( lua_State * const L )
 }
 
 /*
-static int Leendvn2 ( lua_State * const L )
+static int x_eendvn2 ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -388,7 +390,7 @@ static int Leendvn2 ( lua_State * const L )
 }
 */
 
-static int Lewend2 ( lua_State * const L )
+static int x_ewend2 ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -401,7 +403,7 @@ static int Lewend2 ( lua_State * const L )
   return luaL_error ( L, "non empty string and integer required" ) ;
 }
 
-static int Lewendv2 ( lua_State * const L )
+static int x_ewendv2 ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -415,7 +417,7 @@ static int Lewendv2 ( lua_State * const L )
 }
 
 /*
-static int Lewendvn2 ( lua_State * const L )
+static int x_ewendvn2 ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -430,7 +432,7 @@ static int Lewendvn2 ( lua_State * const L )
 */
 
 /* prefix each einfo line with something */
-static int Leprefix ( lua_State * const L )
+static int x_eprefix ( lua_State * const L )
 {
   const char * pfx = luaL_checkstring ( L, 1 ) ;
 
@@ -443,7 +445,7 @@ static int Leprefix ( lua_State * const L )
 }
 
 /* ebracket allows you to specifiy the position, color and message */
-static int Lebracket ( lua_State * const L )
+static int x_ebracket ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   int c = luaL_checkinteger ( L, 2 ) ;
@@ -459,7 +461,7 @@ static int Lebracket ( lua_State * const L )
 }
 
 /* write something to syslog */
-static int Lelog ( lua_State * const L )
+static int x_elog ( lua_State * const L )
 {
   int i = luaL_checkinteger ( L, 1 ) ;
   const char * fmt = luaL_checkstring ( L, 2 ) ;
@@ -475,43 +477,43 @@ static int Lelog ( lua_State * const L )
 /* struct array that holds the exported Lua C functions and their names */
 static const luaL_Reg efunc [ ] = {
   /* begin of struct array */
-  { "eindent",			Leindent	},
-  { "eindentv",			Leindentv	},
-  { "eoutdent",			Leoutdent	},
-  { "eoutdentv",		Leoutdentv	},
-  { "einfo",			Leinfo		},
-  { "einfon",			Leinfon		},
-  { "einfov",			Leinfov		},
-  { "einfovn",			Leinfovn	},
-  { "ewarn",			Lewarn		},
-  { "ewarnn",			Lewarnn		},
-  { "ewarnv",			Lewarnv		},
-  { "ewarnn",			Lewarnn		},
-  { "ewarnvn",			Lewarnvn	},
-  { "ewarnx",			Lewarnx		},
-  { "eerror",			Leerror		},
-  { "eerrorn",			Leerrorn	},
-  { "eerrorx",			Leerrorx	},
-  { "ebegin",			Lebegin		},
-  { "ebeginv",			Lebeginv	},
-  { "eend",			Leend		},
-  { "eendv",			Leendv		},
-  { "ewend",			Lewend		},
-  { "ewendv",			Lewendv		},
-  { "eend2",			Leend2		},
-  { "eendv2",			Leendv2		},
-  { "ewend2",			Lewend2		},
-  { "ewendv2",			Lewendv2	},
-  { "eprefix",			Leprefix	},
-  { "ebracket",			Lebracket	},
-  { "elog",			Lelog		},
-  { "esyslog",			Lelog		},
+  { "eindent",			x_eindent	},
+  { "eindentv",			x_eindentv	},
+  { "eoutdent",			x_eoutdent	},
+  { "eoutdentv",		x_eoutdentv	},
+  { "einfo",			x_einfo		},
+  { "einfon",			x_einfon	},
+  { "einfov",			x_einfov	},
+  { "einfovn",			x_einfovn	},
+  { "ewarn",			x_ewarn		},
+  { "ewarnn",			x_ewarnn	},
+  { "ewarnv",			x_ewarnv	},
+  { "ewarnn",			x_ewarnn	},
+  { "ewarnvn",			x_ewarnvn	},
+  { "ewarnx",			x_ewarnx	},
+  { "eerror",			x_eerror	},
+  { "eerrorn",			x_eerrorn	},
+  { "eerrorx",			x_eerrorx	},
+  { "ebegin",			x_ebegin	},
+  { "ebeginv",			x_ebeginv	},
+  { "eend",			x_eend		},
+  { "eendv",			x_eendv		},
+  { "ewend",			x_ewend		},
+  { "ewendv",			x_ewendv	},
+  { "eend2",			x_eend2		},
+  { "eendv2",			x_eendv2	},
+  { "ewend2",			x_ewend2	},
+  { "ewendv2",			x_ewendv2	},
+  { "eprefix",			x_eprefix	},
+  { "ebracket",			x_ebracket	},
+  { "elog",			x_elog		},
+  { "esyslog",			x_elog		},
 /*
-  { "ebeginvn",			Lebeginvn	},
-  { "eendvn",			Leendvn		},
-  { "eendvn2",			Leendvn2	},
-  { "ewendvn",			Lewendvn	},
-  { "ewendvn2",			Lewendvn2	},
+  { "ebeginvn",			x_ebeginvn	},
+  { "eendvn",			x_eendvn	},
+  { "eendvn2",			x_eendvn2	},
+  { "ewendvn",			x_ewendvn	},
+  { "ewendvn2",			x_ewendvn2	},
  */
 
   /* last sentinel entry to mark the end of this array */
