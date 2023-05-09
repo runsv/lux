@@ -1,6 +1,8 @@
 /*
  * some posix bindings for Lua (as a Lua module)
  * wrappers to system calls for Lua 5.3+
+ *
+ * public domain
  */
 
 /*
